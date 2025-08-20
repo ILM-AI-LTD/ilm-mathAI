@@ -20,7 +20,6 @@ python app.py
   "question": "Solve x^2 + 2x + 1 = 0",
   "image": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAA...",
   "correct_answer": "x = -1 (double root)",
-  "previous_steps": ["Step 1: Identified as quadratic equation"]
 }
 ```
 
@@ -32,7 +31,6 @@ python app.py
   "question": "Solve x^2 + 2x + 1 = 0", 
   "correct_answer": "x = -1 (double root)",
   "student_answer": "x^2 + 2x + 1 = (x+1)^2",
-  "previous_steps": ["Applied factoring method"]
 }
 ```
 
@@ -50,7 +48,6 @@ python app.py
 ### Full Evaluation Response
 ```json
 {
-  "success": true,
   "extracted_text": "x^2 + 2x + 1 = (x+1)^2 = 0",
   "evaluation": "{\n\"evaluation\": \"Good work! You correctly factored the quadratic expression as (x+1)^2.\",\n\"hint\": \"Now that you have (x+1)^2 = 0, what value of x would make this equation true?\"\n}",
   "error": null
@@ -60,7 +57,6 @@ python app.py
 ### Text-Only Evaluation Response
 ```json
 {
-  "success": true,
   "evaluation": "{\n\"evaluation\": \"Excellent factoring! You correctly identified this as a perfect square trinomial.\",\n\"hint\": \"Now solve (x+1)^2 = 0. What happens when a squared term equals zero?\"\n}",
   "error": null
 }
@@ -69,7 +65,6 @@ python app.py
 ### OCR Only Response
 ```json
 {
-  "success": true,
   "text": "x^2 + 2x + 1 = (x+1)^2",
   "error": null
 }
