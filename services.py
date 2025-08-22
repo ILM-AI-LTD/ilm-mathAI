@@ -2,8 +2,10 @@
 Math Evaluation Services
 Core business logic for OCR and math evaluation functionality
 """
-
+from google import genai
+from PIL import Image
 import os
+import base64
 import json
 import logging
 from typing import Dict, Any, Optional
@@ -26,40 +28,87 @@ class MathEvaluationService:
         """Get the system prompt for evaluation"""
         return eval_prompt
     
+    # def extract_text_from_image(self, image_data: str, mime_type: str) -> Dict[str, Any]:
+    #     """
+    #     Extract handwritten text from image using OpenAI Vision API
+        
+    #     Args:
+    #         image_data: Base64 encoded image string
+            
+    #     Returns:
+    #         Dict containing extracted text and status
+    #     """
+    #     try:
+    #         logger.info(type(image_data))
+    #         response = self.client.chat.completions.create(
+    #             model="gpt-5",
+    #             messages=[
+    #                 {
+    #                     "role": "user",
+    #                     "content": [
+    #                         {
+    #                             "type": "text",
+    #                             "text": ocr_prompt
+    #                         },
+    #                         {
+    #                             "type": "image_url",
+    #                             "image_url": {
+    #                                 "url": f"data:{mime_type};base64,{image_data}"
+    #                             }
+    #                         }
+    #                     ]
+    #                 }
+    #             ],
+    #             # max_tokens=1000
+    #         )
+            
+    #         extracted_text = response.choices[0].message.content.strip()
+    #         logger.info(f"Successfully extracted text: {extracted_text[:50]}...")
+            
+    #         return {
+    #             "success": True,
+    #             "text": extracted_text,
+    #             "error": None
+    #         }
+            
+    #     except Exception as e:
+    #         logger.error(f"OCR extraction failed: {str(e)}")
+    #         return {
+    #             "success": False,
+    #             "text": None,
+    #             "error": f"Failed to extract text: {str(e)}"
+    #         }
+
     def extract_text_from_image(self, image_data: str) -> Dict[str, Any]:
         """
         Extract handwritten text from image using OpenAI Vision API
         
         Args:
             image_data: Base64 encoded image string
+            mime_type: MIME type of the image (e.g., 'image/png')
             
         Returns:
             Dict containing extracted text and status
         """
         try:
-            response = self.client.chat.completions.create(
-                model="gpt-5",
-                messages=[
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": ocr_prompt
-                            },
-                            {
-                                "type": "image_url",
-                                "image_url": {
-                                    "url": f"data:image/jpeg;base64,{image_data}"
-                                }
-                            }
-                        ]
-                    }
-                ],
-                # max_tokens=1000
-            )
+            # Debug logging
+            # logger.info(f"Processing image with MIME type: {mime_type}")
+            # logger.info(f"Image data length: {len(image_data)} characters")
             
-            extracted_text = response.choices[0].message.content.strip()
+            # Ensure MIME type is valid
+            # if not mime_type.startswith('image/'):
+            #     raise ValueError(f"Invalid MIME type: {mime_type}")
+            # api_key = os.getenv("GOOGLE_API_KEY")
+            client1 = genai.Client()
+            img = Image.open(image_data)
+            
+            response = client1.models.generate_content(
+                model="gemini-2.0-flash",
+                contents=[img, ocr_prompt]
+            )
+            extracted_text = response.text
+            
+            # extracted_text = response.choices[0].message.content.strip()
             logger.info(f"Successfully extracted text: {extracted_text[:50]}...")
             
             return {
@@ -75,7 +124,7 @@ class MathEvaluationService:
                 "text": None,
                 "error": f"Failed to extract text: {str(e)}"
             }
-    
+        
     def evaluate_math_solution(
         self, 
         question: str, 
@@ -143,7 +192,8 @@ class MathEvaluationService:
         image_data: str,
         question: str,
         correct_answer: str,
-        step_count: int 
+        step_count: int,
+        # mime_type: str,  
     ) -> Dict[str, Any]:
         """
         Perform OCR + Evaluation in one operation
@@ -198,6 +248,15 @@ class MathEvaluationService:
 class ValidationService:
     """Service for input validation"""
     
+    # Supported image MIME types for OpenAI Vision API
+    SUPPORTED_IMAGE_TYPES = {
+        'image/png',
+        'image/jpeg', 
+        'image/jpg',
+        'image/gif',
+        'image/webp'
+    }
+    
     @staticmethod
     def validate_image_data(image_data: str) -> Dict[str, Any]:
         """Validate base64 image data"""
@@ -215,6 +274,20 @@ class ValidationService:
             return {"valid": True, "cleaned_data": image_data, "error": None}
         except Exception:
             return {"valid": False, "error": "Invalid image data format"}
+    
+    @staticmethod
+    def validate_mime_type(mime_type: str) -> Dict[str, Any]:
+        """Validate image MIME type"""
+        if not mime_type:
+            return {"valid": False, "error": "MIME type is required"}
+        
+        if mime_type not in ValidationService.SUPPORTED_IMAGE_TYPES:
+            return {
+                "valid": False, 
+                "error": f"Unsupported MIME type: {mime_type}. Supported types: {', '.join(ValidationService.SUPPORTED_IMAGE_TYPES)}"
+            }
+        
+        return {"valid": True, "error": None}
     
     @staticmethod
     def validate_evaluation_request(data: Dict[str, Any]) -> Dict[str, Any]:

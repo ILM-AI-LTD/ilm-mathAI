@@ -4,6 +4,7 @@ Clean, production-ready Flask app with proper error handling and structure
 """
 
 import os
+import base64
 import logging
 from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
@@ -52,6 +53,40 @@ def health_check():
         "version": "1.0.0"
     })
 
+# @app.route('/api/ocr', methods=['POST'])
+# def extract_text():
+#     """Extract text from uploaded image"""
+#     try:
+#         data = request.get_json()
+        
+#         if not data:
+#             return jsonify({
+#                 "success": False,
+#                 "error": "No JSON data provided"
+#             }), 400
+        
+#         # Validate image data
+#         image_validation = validation_service.validate_image_data(data.get('image', ''))
+#         print("OK")
+#         if not image_validation['valid']:
+#             return jsonify({
+#                 "success": False,
+#                 "error": image_validation['error']
+#             }), 400
+        
+#         # Extract text
+#         result = math_service.extract_text_from_image(image_validation['cleaned_data'])
+        
+#         return jsonify(result), 200 if result['success'] else 500
+        
+#     except Exception as e:
+#         logger.error(f"OCR endpoint error: {str(e)}")
+#         return jsonify({
+#             "success": False,
+#             "error": "Internal server error"
+#         }), 500
+
+
 @app.route('/api/ocr', methods=['POST'])
 def extract_text():
     """Extract text from uploaded image"""
@@ -72,8 +107,20 @@ def extract_text():
                 "error": image_validation['error']
             }), 400
         
-        # Extract text
-        result = math_service.extract_text_from_image(image_validation['cleaned_data'])
+        # Extract MIME type from data URL or default to PNG
+        image_data = data.get('image', '')
+        mime_type = 'image/png'  # Default
+        
+        if image_data.startswith('data:image'):
+            # Extract MIME type from data URL (e.g., "data:image/jpeg;base64,...")
+            mime_type = image_data.split(';')[0].split(':')[1]
+        
+        # Extract text with MIME type
+        result = math_service.extract_text_from_image(
+            # image_validation['cleaned_data'],
+            image_data, 
+            mime_type
+        )
         
         return jsonify(result), 200 if result['success'] else 500
         
@@ -83,6 +130,7 @@ def extract_text():
             "success": False,
             "error": "Internal server error"
         }), 500
+
 
 @app.route('/api/evaluate', methods=['POST'])
 def evaluate_solution():
@@ -124,46 +172,55 @@ def evaluate_solution():
 
 @app.route('/api/full_evaluation', methods=['POST'])
 def full_evaluation():
-    """Perform OCR + Evaluation in one request"""
+    """Perform OCR + Evaluation in one request (with file upload support)"""
     try:
-        data = request.get_json()
-        
-        if not data:
+        # Ensure a file was uploaded
+        if 'image' not in request.files:
             return jsonify({
                 "success": False,
-                "error": "No JSON data provided"
+                "error": "No image file provided"
             }), 400
-        
-        # Validate request data
-        validation = validation_service.validate_full_evaluation_request(data)
-        if not validation['valid']:
+
+        image = request.files['image']
+        # if file.filename == '':
+        #     return jsonify({
+        #         "success": False,
+        #         "error": "Empty filename"
+        #     }), 400
+
+        # Read image as bytes
+        # image_bytes = file.read()
+
+        # Get extra form fields (from form-data)
+        question = request.form.get('question')
+        correct_answer = request.form.get('correct_answer')
+        step_count = int(request.form.get('currentStepCount', 0))
+
+        if not question or not correct_answer:
             return jsonify({
                 "success": False,
-                "error": validation['error']
+                "error": "Missing required fields: question/correct_answer"
             }), 400
-        
-        # Clean image data
-        image_data = data['image']
-        if image_data.startswith('data:image'):
-            image_data = image_data.split(',')[1]
-        
-        # Perform full evaluation
-        step_count = data.get('currentStepCount', 0)
+
+        # Call your service with raw bytes
         result = math_service.process_full_evaluation(
-            image_data=image_data,
-            question=data['question'],
-            correct_answer=data['correct_answer'],
+            image_data=image,
+            question=question,
+            correct_answer=correct_answer,
             step_count=step_count
         )
-        
+
         return jsonify(result), 200 if result['success'] else 500
-        
+
     except Exception as e:
         logger.error(f"Full evaluation endpoint error: {str(e)}")
         return jsonify({
             "success": False,
             "error": "Internal server error"
         }), 500
+
+
+
 
 # Error handlers
 @app.errorhandler(400)
