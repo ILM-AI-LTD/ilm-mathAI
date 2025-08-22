@@ -3,175 +3,190 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Math Evaluation System</title>
+    <title>Math Evaluation System</title>
     <style>
-        :root {
-            --primary-color: #007bff;
-            --secondary-color: #6c757d;
-            --success-color: #28a745;
-            --danger-color: #dc3545;
-            --light-color: #f8f9fa;
-            --dark-color: #343a40;
-            --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            --border-radius: 8px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            font-family: var(--font-family);
-            background-color: var(--light-color);
-            color: var(--dark-color);
-            margin: 0;
-            padding: 2rem;
-            display: flex;
-            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
         }
 
         .container {
             max-width: 800px;
-            width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
 
-        h1 {
-            color: var(--dark-color);
+        .header {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
+            padding: 30px;
             text-align: center;
-            margin-bottom: 2rem;
         }
 
-        .card {
-            background-color: #ffffff;
-            border: 1px solid #dee2e6;
-            border-radius: var(--border-radius);
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            padding: 40px;
         }
 
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 25px;
         }
 
-        label {
+        .form-group label {
             display: block;
             font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        input[type="text"],
-        textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ced4da;
-            border-radius: var(--border-radius);
+            margin-bottom: 8px;
+            color: #374151;
             font-size: 1rem;
-            box-sizing: border-box;
         }
 
-        textarea {
-            min-height: 80px;
+        .form-control {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+            background: #f9fafb;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #4f46e5;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+
+        textarea.form-control {
             resize: vertical;
+            min-height: 100px;
         }
 
-        .file-upload-wrapper {
-            border: 2px dashed var(--primary-color);
-            border-radius: var(--border-radius);
-            padding: 2rem;
+        .upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 40px;
             text-align: center;
+            transition: all 0.2s ease;
+            background: #f9fafb;
             cursor: pointer;
-            transition: background-color 0.2s;
-        }
-        .file-upload-wrapper:hover {
-            background-color: #e9ecef;
-        }
-        .file-upload-wrapper p {
-            margin: 0;
-            font-weight: 500;
-            color: var(--secondary-color);
         }
 
-        input[type="file"] {
+        .upload-area:hover {
+            border-color: #4f46e5;
+            background: #f0f9ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #4f46e5;
+            background: #e0e7ff;
+        }
+
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: #9ca3af;
+        }
+
+        .upload-text {
+            color: #6b7280;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            color: #9ca3af;
+            font-size: 0.9rem;
+        }
+
+        .file-input {
             display: none;
         }
-        
-        #image-preview {
+
+        .image-preview {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .image-preview img {
             max-width: 100%;
             max-height: 300px;
-            margin-top: 1rem;
-            border-radius: var(--border-radius);
-            border: 1px solid #dee2e6;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
 
         .btn {
-            display: block;
-            width: 100%;
-            padding: 1rem;
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #fff;
-            background-color: var(--primary-color);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 28px;
             border: none;
-            border-radius: var(--border-radius);
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.2s;
+            transition: all 0.2s ease;
+            text-decoration: none;
         }
 
-        .btn:hover {
-            background-color: #0056b3;
+        .btn-primary {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            color: white;
         }
-        
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #e5e7eb;
+        }
+
         .btn:disabled {
-            background-color: var(--secondary-color);
+            opacity: 0.6;
             cursor: not-allowed;
         }
 
-        #results {
-            margin-top: 2rem;
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
         }
 
-        .result-box {
-            background-color: #ffffff;
-            border: 1px solid #dee2e6;
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            margin-top: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-        }
-
-        .result-box h3 {
-            margin-top: 0;
-            color: var(--primary-color);
-            border-bottom: 2px solid var(--primary-color);
-            padding-bottom: 0.5rem;
-        }
-        
-        .result-box pre {
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            background-color: var(--light-color);
-            padding: 1rem;
-            border-radius: var(--border-radius);
-            font-family: monospace;
-        }
-        
-        .alert {
-            padding: 1rem;
-            margin-bottom: 1rem;
-            border-radius: var(--border-radius);
-            text-align: center;
-        }
-        
-        .alert-danger {
-            color: #721c24;
-            background-color: #f8d7da;
-            border: 1px solid #f5c6cb;
-        }
-
-        .spinner {
-            display: none; /* Hidden by default */
-            margin: 2rem auto;
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(0, 123, 255, 0.2);
-            border-top-color: var(--primary-color);
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
             border-radius: 50%;
             animation: spin 1s linear infinite;
         }
@@ -179,155 +194,486 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
+
+        .result-section {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 12px;
+            border-left: 4px solid #10b981;
+            background: #f0fdf4;
+        }
+
+        .result-section.error {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .result-title {
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: #065f46;
+        }
+
+        .result-section.error .result-title {
+            color: #dc2626;
+        }
+
+        .result-item {
+            margin-bottom: 15px;
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 5px;
+        }
+
+        .result-value {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+        }
+
+        .step-counter {
+            background: #f3f4f6;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .step-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4f46e5;
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 30px;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all 0.2s ease;
+        }
+
+        .tab.active {
+            color: #4f46e5;
+            border-bottom: 2px solid #4f46e5;
+            margin-bottom: -2px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .btn-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
-
     <div class="container">
-        <h1>🧠 AI Math Evaluation System</h1>
-
-        <div class="card">
-            <form id="eval-form">
-                <div class="form-group">
-                    <label for="question">Math Question</label>
-                    <textarea id="question" name="question" placeholder="e.g., Solve for x: 2x + 5 = 15" required></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label for="correct-answer">Correct Answer</label>
-                    <input type="text" id="correct-answer" name="correct_answer" placeholder="e.g., x = 5" required>
-                </div>
-
-                <div class="form-group">
-                    <label for="student-work">Upload Student's Handwritten Work</label>
-                    <label for="student-work-image" class="file-upload-wrapper">
-                        <p id="file-upload-text">Click or drag image here</p>
-                    </label>
-                    <input type="file" id="student-work-image" accept="image/png, image/jpeg, image/webp" required>
-                    <img id="image-preview" src="" alt="Image preview" style="display: none;">
-                </div>
-
-                <button type="submit" id="submit-btn" class="btn">Evaluate</button>
-            </form>
+        <div class="header">
+            <h1>🧮 Math Evaluation System</h1>
+            <p>Upload your handwritten math solutions for AI-powered feedback</p>
+            <div style="font-size: 0.9rem; opacity: 0.8; margin-top: 10px;">
+                Running on: <code>http://127.0.0.1:5000</code> | <code>http://192.168.0.104:5000</code>
+            </div>
         </div>
 
-        <div id="loading-spinner" class="spinner"></div>
-
-        <div id="error-message"></div>
-
-        <div id="results" style="display: none;">
-            <div class="result-box">
-                <h3>🤖 Extracted Text (OCR)</h3>
-                <pre id="ocr-text"></pre>
+        <div class="main-content">
+            <div class="step-counter">
+                <div class="step-number" id="stepCounter">Step 1</div>
+                <div>Current evaluation step</div>
             </div>
-            <div class="result-box">
-                <h3>💡 AI Feedback & Hints</h3>
-                <div id="evaluation-text"></div>
+
+            <div class="tabs">
+                <div class="tab active" onclick="switchTab('upload')">📸 Upload & Evaluate</div>
+                <div class="tab" onclick="switchTab('manual')">✏️ Manual Evaluation</div>
             </div>
+
+            <!-- Upload Tab -->
+            <div id="uploadTab" class="tab-content active">
+                <div class="form-group">
+                    <label for="question">Math Question</label>
+                    <textarea id="question" class="form-control" rows="3" placeholder="Enter the math question here..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="correctAnswer">Correct Answer</label>
+                    <input type="text" id="correctAnswer" class="form-control" placeholder="Enter the correct answer...">
+                </div>
+
+                <div class="form-group">
+                    <label>Upload Student's Work (Image)</label>
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">Click to upload or drag and drop</div>
+                        <div class="upload-subtext">PNG, JPG, or JPEG (max 16MB)</div>
+                    </div>
+                    <input type="file" id="imageInput" class="file-input" accept="image/*">
+                    <div id="imagePreview" class="image-preview" style="display: none;"></div>
+                </div>
+
+                <div class="btn-group">
+                    <button id="evaluateBtn" class="btn btn-primary" onclick="evaluateWithImage()">
+                        <span id="evaluateText">🔍 Evaluate Solution</span>
+                        <span id="evaluateLoading" class="loading" style="display: none;"></span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearForm()">🗑️ Clear All</button>
+                </div>
+            </div>
+
+            <!-- Manual Tab -->
+            <div id="manualTab" class="tab-content">
+                <div class="form-group">
+                    <label for="manualQuestion">Math Question</label>
+                    <textarea id="manualQuestion" class="form-control" rows="3" placeholder="Enter the math question here..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="manualCorrectAnswer">Correct Answer</label>
+                    <input type="text" id="manualCorrectAnswer" class="form-control" placeholder="Enter the correct answer...">
+                </div>
+
+                <div class="form-group">
+                    <label for="studentAnswer">Student's Answer/Work</label>
+                    <textarea id="studentAnswer" class="form-control" rows="4" placeholder="Enter the student's work or answer here..."></textarea>
+                </div>
+
+                <div class="btn-group">
+                    <button id="manualEvaluateBtn" class="btn btn-primary" onclick="evaluateManually()">
+                        <span id="manualEvaluateText">🔍 Evaluate Manually</span>
+                        <span id="manualEvaluateLoading" class="loading" style="display: none;"></span>
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearManualForm()">🗑️ Clear All</button>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div id="results" style="display: none;"></div>
         </div>
     </div>
 
     <script>
-        const form = document.getElementById('eval-form');
-        const questionInput = document.getElementById('question');
-        const correctAnswerInput = document.getElementById('correct-answer');
-        const imageInput = document.getElementById('student-work-image');
-        const imagePreview = document.getElementById('image-preview');
-        const fileUploadText = document.getElementById('file-upload-text');
-        const submitBtn = document.getElementById('submit-btn');
-        const spinner = document.getElementById('loading-spinner');
-        const resultsDiv = document.getElementById('results');
-        const ocrTextElem = document.getElementById('ocr-text');
-        const evaluationTextElem = document.getElementById('evaluation-text');
-        const errorMessageDiv = document.getElementById('error-message');
-    
-        // Handle image preview
-        imageInput.addEventListener('change', () => {
-            const file = imageInput.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    imagePreview.src = e.target.result;
-                    imagePreview.style.display = 'block';
-                    fileUploadText.textContent = `File selected: ${file.name}`;
-                };
-                reader.readAsDataURL(file);
+        let currentStep = 1;
+        let selectedImage = null;
+
+        // Tab switching
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+
+        // File upload handling
+        const uploadArea = document.getElementById('uploadArea');
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+
+        uploadArea.addEventListener('click', () => imageInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
             }
         });
-    
-        // Handle form submission
-        form.addEventListener('submit', async (event) => {
-            event.preventDefault();
-    
-            // Reset UI
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Evaluating...';
-            spinner.style.display = 'block';
-            resultsDiv.style.display = 'none';
-            errorMessageDiv.innerHTML = '';
-            
-            const file = imageInput.files[0];
-            if (!file) {
-                showError('Please select an image file.');
-                resetButton();
+
+        imageInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showError('Please select a valid image file.');
                 return;
             }
-    
+
+            if (file.size > 16 * 1024 * 1024) {
+                showError('File size must be less than 16MB.');
+                return;
+            }
+
             const reader = new FileReader();
+            reader.onload = (e) => {
+                selectedImage = e.target.result;
+                showImagePreview(selectedImage);
+            };
             reader.readAsDataURL(file);
-            reader.onload = async () => {
-                const base64Image = reader.result;
-    
-                const payload = {
-                    question: questionInput.value,
-                    correct_answer: correctAnswerInput.value,
-                    image: base64Image
-                };
-    
-                try {
-                    // ✅ **URL has been updated here**
-                    const response = await fetch('http://127.0.0.1:5000/api/full_evaluation', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(payload)
-                    });
-    
-                    const data = await response.json();
-    
-                    if (!response.ok || !data.success) {
-                        throw new Error(data.error || 'An unknown error occurred.');
-                    }
-    
-                    // Display results
-                    ocrTextElem.textContent = data.extracted_text || 'No text extracted.';
-                    evaluationTextElem.innerHTML = data.evaluation.replace(/\n/g, '<br>');
-                    resultsDiv.style.display = 'block';
-    
-                } catch (error) {
-                    console.error('Evaluation Error:', error);
-                    showError(`Error: ${error.message}`);
-                } finally {
-                    resetButton();
-                }
-            };
-            
-            reader.onerror = (error) => {
-                console.error('File Reading Error:', error);
-                showError('Failed to read the image file.');
-                resetButton();
-            };
-        });
-    
-        function showError(message) {
-            errorMessageDiv.innerHTML = `<div class="alert alert-danger">${message}</div>`;
         }
-    
-        function resetButton() {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Evaluate';
-            spinner.style.display = 'none';
+
+        function showImagePreview(imageSrc) {
+            imagePreview.innerHTML = `<img src="${imageSrc}" alt="Preview">`;
+            imagePreview.style.display = 'block';
+        }
+
+        // Configuration
+        const API_BASE_URL = 'http://127.0.0.1:5000'; // Specific backend URL
+
+        // API calls
+        async function evaluateWithImage() {
+            const question = document.getElementById('question').value.trim();
+            const correctAnswer = document.getElementById('correctAnswer').value.trim();
+
+            if (!question || !correctAnswer || !selectedImage) {
+                showError('Please fill in all fields and upload an image.');
+                return;
+            }
+
+            setLoading('evaluate', true);
+
+            try {
+                console.log('Making API call to:', `${API_BASE_URL}/api/full_evaluation`);
+                console.log('Request data:', {
+                    question,
+                    correct_answer: correctAnswer,
+                    image: selectedImage.substring(0, 50) + '...', // Log first 50 chars of image
+                    currentStepCount: currentStep - 1
+                });
+
+                const response = await fetch(`${API_BASE_URL}/api/full_evaluation`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question,
+                        correct_answer: correctAnswer,
+                        image: selectedImage,
+                        currentStepCount: currentStep - 1
+                    })
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response headers:', response.headers);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('Response data:', result);
+                
+                if (result.success) {
+                    currentStep = result.nextStepCount;
+                    updateStepCounter();
+                    showResults(result, 'full');
+                } else {
+                    showError(result.error || 'Evaluation failed');
+                }
+            } catch (error) {
+                console.error('API call failed:', error);
+                showError('Network error: ' + error.message + '. Check console for details.');
+            } finally {
+                setLoading('evaluate', false);
+            }
+        }
+
+        async function evaluateManually() {
+            const question = document.getElementById('manualQuestion').value.trim();
+            const correctAnswer = document.getElementById('manualCorrectAnswer').value.trim();
+            const studentAnswer = document.getElementById('studentAnswer').value.trim();
+
+            if (!question || !correctAnswer || !studentAnswer) {
+                showError('Please fill in all fields.');
+                return;
+            }
+
+            setLoading('manualEvaluate', true);
+
+            try {
+                console.log('Making API call to:', `${API_BASE_URL}/api/evaluate`);
+                console.log('Request data:', {
+                    question,
+                    correct_answer: correctAnswer,
+                    student_answer: studentAnswer,
+                    nextStepCount: currentStep - 1
+                });
+
+                const response = await fetch(`${API_BASE_URL}/api/evaluate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question,
+                        correct_answer: correctAnswer,
+                        student_answer: studentAnswer,
+                        nextStepCount: currentStep - 1
+                    })
+                });
+
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log('Response data:', result);
+                
+                if (result.success) {
+                    currentStep = result.nextStepCount;
+                    updateStepCounter();
+                    showResults(result, 'manual');
+                } else {
+                    showError(result.error || 'Evaluation failed');
+                }
+            } catch (error) {
+                console.error('API call failed:', error);
+                showError('Network error: ' + error.message + '. Check console for details.');
+            } finally {
+                setLoading('manualEvaluate', false);
+            }
+        }
+
+        // Test API connectivity
+        async function testConnection() {
+            try {
+                console.log('Testing connection to:', `${API_BASE_URL}/api/health`);
+                const response = await fetch(`${API_BASE_URL}/api/health`);
+                const result = await response.json();
+                console.log('Health check result:', result);
+                return result;
+            } catch (error) {
+                console.error('Health check failed:', error);
+                return null;
+            }
+        }
+
+        // Test connection on page load
+        window.addEventListener('load', () => {
+            testConnection();
+        });
+
+        // UI helpers
+        function setLoading(buttonType, isLoading) {
+            const textEl = document.getElementById(buttonType + 'Text');
+            const loadingEl = document.getElementById(buttonType + 'Loading');
+            const btnEl = document.getElementById(buttonType + 'Btn');
+
+            if (isLoading) {
+                textEl.style.display = 'none';
+                loadingEl.style.display = 'inline-block';
+                btnEl.disabled = true;
+            } else {
+                textEl.style.display = 'inline';
+                loadingEl.style.display = 'none';
+                btnEl.disabled = false;
+            }
+        }
+
+        function updateStepCounter() {
+            document.getElementById('stepCounter').textContent = `Step ${currentStep}`;
+        }
+
+        function showResults(result, type) {
+            const resultsDiv = document.getElementById('results');
+            let html = '<div class="result-section">';
+            html += '<div class="result-title">✅ Evaluation Results</div>';
+
+            if (type === 'full' && result.extracted_text) {
+                html += '<div class="result-item">';
+                html += '<div class="result-label">📝 Extracted Text:</div>';
+                html += `<div class="result-value">${result.extracted_text}</div>`;
+                html += '</div>';
+            }
+
+            if (result.evaluation) {
+                html += '<div class="result-item">';
+                html += '<div class="result-label">🎯 Evaluation:</div>';
+                html += `<div class="result-value">${result.evaluation}</div>`;
+                html += '</div>';
+            }
+
+            if (result.hint) {
+                html += '<div class="result-item">';
+                html += '<div class="result-label">💡 Hint:</div>';
+                html += `<div class="result-value">${result.hint}</div>`;
+                html += '</div>';
+            }
+
+            html += '</div>';
+            resultsDiv.innerHTML = html;
+            resultsDiv.style.display = 'block';
+        }
+
+        function showError(message) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = `
+                <div class="result-section error">
+                    <div class="result-title">❌ Error</div>
+                    <div class="result-value">${message}</div>
+                </div>
+            `;
+            resultsDiv.style.display = 'block';
+        }
+
+        function clearForm() {
+            document.getElementById('question').value = '';
+            document.getElementById('correctAnswer').value = '';
+            imageInput.value = '';
+            selectedImage = null;
+            imagePreview.style.display = 'none';
+            document.getElementById('results').style.display = 'none';
+        }
+
+        function clearManualForm() {
+            document.getElementById('manualQuestion').value = '';
+            document.getElementById('manualCorrectAnswer').value = '';
+            document.getElementById('studentAnswer').value = '';
+            document.getElementById('results').style.display = 'none';
         }
     </script>
 </body>

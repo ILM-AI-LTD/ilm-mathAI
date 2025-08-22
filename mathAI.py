@@ -1,247 +1,223 @@
-from openai import OpenAI
-from flask import Flask, request, jsonify, render_template
-import base64
+"""
+Math Evaluation Flask Application
+Clean, production-ready Flask app with proper error handling and structure
+"""
+
 import os
+import logging
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
-from prompts import prompt  # Make sure this file exists with your evaluation prompt
+from services import math_service, validation_service
 
-# Initialize OpenAI client
-client = OpenAI()  # Reads OPENAI_API_KEY from environment
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
-app = Flask(__name__)
-CORS(app)
-
-def evaluate_math_question(math_question, cr_answer, st_answer, previous_steps=None):
-    """
-    Evaluate a student's answer against the correct answer for a math question.
-    Provides hints and guidance rather than full solutions.
+def create_app():
+    """Application factory pattern"""
+    app = Flask(__name__)
     
-    Args:
-        math_question: The original math problem
-        cr_answer: The correct/expected answer
-        st_answer: The student's current answer/work
-        previous_steps: Optional list of previous student steps for multi-step problems
-    """
-    try:
-        # Construct the evaluation prompt
-        user_content = f"Question: {math_question}\nCorrect Answer: {cr_answer}\nStudent's Current Work: {st_answer}"
-        
-        # Add previous steps context if provided
-        if previous_steps:
-            steps_text = "\n".join([f"Step {i+1}: {step}" for i, step in enumerate(previous_steps)])
-            user_content += f"\n\nPrevious Steps:\n{steps_text}"
-            user_content += "\n\nNote: Focus evaluation on the latest step only."
-        
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": prompt},
-                {"role": "user", "content": user_content}
-            ],
-            max_tokens=800,  # Reduced since we want concise hints, not full solutions
-            temperature=0.2  # Lower temperature for more consistent educational feedback
-        )
-        
-        evaluation = response.choices[0].message.content
-        return {
-            "success": True,
-            "evaluation": evaluation,
-            "error": None
-        }
-        
-    except Exception as e:
-        return {
-            "success": False,
-            "evaluation": None,
-            "error": str(e)
-        }
+    # Configuration
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+    app.config['JSON_SORT_KEYS'] = False
+    
+    # Enable CORS
+    CORS(app)
+    
+    return app
 
-def handwritten_ocr(image_data):
-    """
-    Extract handwritten text from image using GPT-4V
-    """
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": """Extract all handwritten text from this image. 
-                            Focus on mathematical expressions, numbers, and equations. 
-                            If there are mathematical symbols or formulas, transcribe them accurately.
-                            Return only the extracted text without additional commentary."""
-                        },
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{image_data}"
-                            }
-                        }
-                    ]
-                }
-            ],
-            max_tokens=1000
-        )
-        
-        extracted_text = response.choices[0].message.content
-        return {
-            "success": True,
-            "text": extracted_text,
-            "error": None
-        }
-        
-    except Exception as e:
-        return {
-            "success": False,
-            "text": None,
-            "error": str(e)
-        }
+app = create_app()
 
-# Flask Routes
-
+# Routes
 @app.route('/')
 def home():
-    """Main page with upload form"""
+    """Serve the main application page"""
     return render_template('index.html')
 
-@app.route('/api/evaluate', methods=['POST'])
-def api_evaluate():
-    """API endpoint for evaluating math questions with hint-based feedback"""
-    try:
-        data = request.json
-        
-        # Validate required fields
-        required_fields = ['question', 'correct_answer', 'student_answer']
-        for field in required_fields:
-            if field not in data:
-                return jsonify({
-                    "success": False,
-                    "error": f"Missing required field: {field}"
-                }), 400
-        
-        # Get optional previous steps for multi-step problems
-        previous_steps = data.get('previous_steps', None)
-        
-        # Evaluate the question
-        result = evaluate_math_question(
-            data['question'],
-            data['correct_answer'],
-            data['student_answer'],
-            previous_steps
-        )
-        
-        return jsonify(result)
-        
-    except Exception as e:
-        return jsonify({
-            "success": False,
-            "error": str(e)
-        }), 500
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Health check endpoint"""
+    return jsonify({
+        "status": "healthy",
+        "service": "Math Evaluation API",
+        "version": "1.0.0"
+    })
 
 @app.route('/api/ocr', methods=['POST'])
-def api_ocr():
-    """API endpoint for OCR extraction"""
+def extract_text():
+    """Extract text from uploaded image"""
     try:
-        data = request.json
+        data = request.get_json()
         
-        if 'image' not in data:
+        if not data:
             return jsonify({
                 "success": False,
-                "error": "Missing image data"
+                "error": "No JSON data provided"
             }), 400
         
-        # Remove data URL prefix if present
-        image_data = data['image']
-        if image_data.startswith('data:image'):
-            image_data = image_data.split(',')[1]
+        # Validate image data
+        image_validation = validation_service.validate_image_data(data.get('image', ''))
+        if not image_validation['valid']:
+            return jsonify({
+                "success": False,
+                "error": image_validation['error']
+            }), 400
         
-        # Extract text from image
-        result = handwritten_ocr(image_data)
+        # Extract text
+        result = math_service.extract_text_from_image(image_validation['cleaned_data'])
         
-        return jsonify(result)
+        return jsonify(result), 200 if result['success'] else 500
         
     except Exception as e:
+        logger.error(f"OCR endpoint error: {str(e)}")
         return jsonify({
             "success": False,
-            "error": str(e)
+            "error": "Internal server error"
+        }), 500
+
+@app.route('/api/evaluate', methods=['POST'])
+def evaluate_solution():
+    """Evaluate math solution manually (without OCR)"""
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                "success": False,
+                "error": "No JSON data provided"
+            }), 400
+        
+        # Validate request data
+        validation = validation_service.validate_evaluation_request(data)
+        if not validation['valid']:
+            return jsonify({
+                "success": False,
+                "error": validation['error']
+            }), 400
+        
+        # Perform evaluation
+        step_count = data.get('nextStepCount', 0)
+        result = math_service.evaluate_math_solution(
+            question=data['question'],
+            correct_answer=data['correct_answer'],
+            student_work=data['student_answer'],
+            step_count=step_count
+        )
+        
+        return jsonify(result), 200 if result['success'] else 500
+        
+    except Exception as e:
+        logger.error(f"Evaluation endpoint error: {str(e)}")
+        return jsonify({
+            "success": False,
+            "error": "Internal server error"
         }), 500
 
 @app.route('/api/full_evaluation', methods=['POST'])
-def api_full_evaluation():
-    """Combined OCR + Evaluation endpoint with hint-based feedback"""
+def full_evaluation():
+    """Perform OCR + Evaluation in one request"""
     try:
-        data = request.json
+        data = request.get_json()
         
-        # Validate required fields
-        if 'image' not in data or 'question' not in data or 'correct_answer' not in data:
+        if not data:
             return jsonify({
                 "success": False,
-                "error": "Missing required fields: image, question, correct_answer"
+                "error": "No JSON data provided"
             }), 400
         
-        # Extract image data
+        # Validate request data
+        validation = validation_service.validate_full_evaluation_request(data)
+        if not validation['valid']:
+            return jsonify({
+                "success": False,
+                "error": validation['error']
+            }), 400
+        
+        # Clean image data
         image_data = data['image']
         if image_data.startswith('data:image'):
             image_data = image_data.split(',')[1]
         
-        # Get optional previous steps
-        previous_steps = data.get('previous_steps', None)
-        
-        # Step 1: OCR
-        ocr_result = handwritten_ocr(image_data)
-        if not ocr_result['success']:
-            return jsonify({
-                "success": False,
-                "error": f"OCR failed: {ocr_result['error']}"
-            }), 500
-        
-        # Step 2: Evaluation with hints
-        eval_result = evaluate_math_question(
-            data['question'],
-            data['correct_answer'],
-            ocr_result['text'],
-            previous_steps
+        # Perform full evaluation
+        step_count = data.get('currentStepCount', 0)
+        result = math_service.process_full_evaluation(
+            image_data=image_data,
+            question=data['question'],
+            correct_answer=data['correct_answer'],
+            step_count=step_count
         )
         
-        if not eval_result['success']:
-            return jsonify({
-                "success": False,
-                "error": f"Evaluation failed: {eval_result['error']}"
-            }), 500
-        
-        # Return combined results
-        return jsonify({
-            "success": True,
-            "extracted_text": ocr_result['text'],
-            "evaluation": eval_result['evaluation'],
-            "error": None
-        })
+        return jsonify(result), 200 if result['success'] else 500
         
     except Exception as e:
+        logger.error(f"Full evaluation endpoint error: {str(e)}")
         return jsonify({
             "success": False,
-            "error": str(e)
+            "error": "Internal server error"
         }), 500
+
+# Error handlers
+@app.errorhandler(400)
+def bad_request(error):
+    """Handle bad request errors"""
+    return jsonify({
+        "success": False,
+        "error": "Bad request - please check your input data"
+    }), 400
 
 @app.errorhandler(413)
 def request_entity_too_large(error):
+    """Handle file size too large errors"""
     return jsonify({
         "success": False,
-        "error": "File too large. Please upload a smaller image."
+        "error": "File too large. Maximum size is 16MB."
     }), 413
 
-if __name__ == '__main__':
-    # Set maximum file size (16MB)
-    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
-    
-    # Run the app
+@app.errorhandler(500)
+def internal_server_error(error):
+    """Handle internal server errors"""
+    logger.error(f"Internal server error: {str(error)}")
+    return jsonify({
+        "success": False,
+        "error": "Internal server error. Please try again later."
+    }), 500
+
+@app.errorhandler(404)
+def not_found(error):
+    """Handle not found errors"""
+    return jsonify({
+        "success": False,
+        "error": "Endpoint not found"
+    }), 404
+
+@app.before_request
+def log_request():
+    """Log incoming requests"""
+    if request.endpoint != 'health_check':  # Skip health check logs
+        logger.info(f"{request.method} {request.path} - {request.remote_addr}")
+
+def main():
+    """Main application entry point"""
+    # Environment configuration
     port = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('FLASK_ENV') == 'development'
+    host = os.environ.get('HOST', '0.0.0.0')
     
-    print("Math Evaluation System starting...")
-    print(f"Running on port {port}")
+    # Check for required environment variables
+    if not os.environ.get('OPENAI_API_KEY'):
+        logger.error("OPENAI_API_KEY environment variable is required")
+        return
     
-    app.run(host='0.0.0.0', port=port, debug=debug)
+    logger.info(f"Starting Math Evaluation System on {host}:{port}")
+    logger.info(f"Debug mode: {debug}")
+    
+    try:
+        app.run(host=host, port=port, debug=debug)
+    except Exception as e:
+        logger.error(f"Failed to start application: {str(e)}")
+
+if __name__ == '__main__':
+    main()
