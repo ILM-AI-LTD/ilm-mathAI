@@ -25,7 +25,13 @@ def create_app():
     app.config['JSON_SORT_KEYS'] = False
     
     # Enable CORS
-    CORS(app)
+    CORS(   
+        app,
+        origins=["null","http://192.168.0.110:3001","*"],  # Allow all origins
+        methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization", "Access-Control-Allow-Credentials"],
+        supports_credentials=True
+         )
     
     return app
 
