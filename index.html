@@ -37,7 +37,8 @@
       formData.append("currentStepCount", document.getElementById("stepCount").value);
 
       try {
-        const res = await fetch("https://ilm-mathai-v0ws.onrender.com/api/full_evaluation", {
+        // url = "https://ilm-mathai-v0ws.onrender.com/api/full_evaluation"
+        const res = await fetch("http://127.0.0.1:5000/api/full_evaluation", {
           method: "POST",
           body: formData
         });

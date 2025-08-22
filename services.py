@@ -233,15 +233,20 @@ class MathEvaluationService:
                 "extracted_text": ocr_result['text'],
                 "evaluation": None,
                 "nextStepCount": eval_result['nextStepCount'],
+                "hint":None
             }
-        
+        if "correct" not in eval_result['hint']:
+            flag = False
+        else:
+            flag = True
         return {
             "success": True,
             "extracted_text": ocr_result['text'],
             "evaluation": eval_result['evaluation'],
             "nextStepCount": eval_result['nextStepCount'],
             "hint": eval_result['hint'],
-            "error": None
+            "error": None,
+            "is_finished": flag
         }
 
 

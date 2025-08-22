@@ -7,9 +7,8 @@ eval_prompt = """
                   - If the partial answer is correct and moving in the right direction, explain briefly why it is valid and then give only a hint for the next step.
                   - If the approach is incorrect, explain what is wrong and give only a hint for the correct method (do not provide the full solution).
 
-               2. The answer may come in multiple steps (each step may include a hint + partial answer).
-                  - In multi-step cases, evaluate only the **latest step** (ignore previous ones).
-                  - For the latest step: if correct, confirm with reasoning and give only a hint for the next step; if incorrect, explain the mistake and give only a hint for correction.
+               2. The student's previous step's answers are given. If the full math is solved then there is no more hint needed.
+                  - if the whole answer is completed reply your answer is correct in the evaluation and hint part.
 
                Important: Never provide the full solution. Only evaluate and give hints.
                Give all the outputs in strictly markdown format.
@@ -18,7 +17,7 @@ eval_prompt = """
 
                {
                "evaluation":#evaluation of the given student's asnwer.
-               "hint" : The hint to solve the porblem  
+               "hint" : The hint to solve the porblem  or "Your answer is correct."
                }
 """
 
