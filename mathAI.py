@@ -119,7 +119,7 @@ def extract_text():
         result = math_service.extract_text_from_image(
             # image_validation['cleaned_data'],
             image_data, 
-            mime_type
+            # mime_type
         )
         
         return jsonify(result), 200 if result['success'] else 500

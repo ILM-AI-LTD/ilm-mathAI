@@ -11,7 +11,8 @@ import logging
 from typing import Dict, Any, Optional
 from openai import OpenAI
 from prompts import eval_prompt, ocr_prompt
-
+from dotenv import load_dotenv
+load_dotenv()
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -21,7 +22,12 @@ class MathEvaluationService:
     
     def __init__(self):
         """Initialize OpenAI client"""
-        self.client = OpenAI()
+        api_key = os.getenv("OPENAI_API_KEY")
+        if not api_key:
+            raise ValueError("OPENAI_API_KEY not found in environment variables")
+        else:
+            print("Key is Found")
+        self.client = OpenAI(api_key=api_key)
         self.system_prompt = self._get_system_prompt()
     
     def _get_system_prompt(self) -> str:
@@ -91,14 +97,6 @@ class MathEvaluationService:
             Dict containing extracted text and status
         """
         try:
-            # Debug logging
-            # logger.info(f"Processing image with MIME type: {mime_type}")
-            # logger.info(f"Image data length: {len(image_data)} characters")
-            
-            # Ensure MIME type is valid
-            # if not mime_type.startswith('image/'):
-            #     raise ValueError(f"Invalid MIME type: {mime_type}")
-            # api_key = os.getenv("GOOGLE_API_KEY")
             client1 = genai.Client()
             img = Image.open(image_data)
             
@@ -152,17 +150,32 @@ class MathEvaluationService:
                 # f"Current Step: {step_count}"
             )
             
-            response = self.client.chat.completions.create(
-                model="gpt-5",
-                messages=[
-                    {"role": "system", "content": self.system_prompt},
-                    {"role": "user", "content": user_content}
+            response = self.client.responses.create(
+                model="gpt-5-nano",
+                
+                input=[
+                    {
+                        "role":"system",
+                        "content":[
+                            {
+                                "type": "input_text",
+                                "text": self.system_prompt
+                            }
+                        ]
+                    },
+                    {
+                        "role": "user",
+                        "content": [
+                            { 
+                                "type": "input_text", 
+                                "text": user_content
+                            }
+                        ]
+                    }
                 ],
-                # max_tokens=100,
-                # temperature=0.3
             )
             
-            evaluation_text = response.choices[0].message.content
+            evaluation_text = response.output_text
             # Clean up any markdown formatting
             evaluation_text = evaluation_text.replace('```json', '').replace('```', '').strip()
             
