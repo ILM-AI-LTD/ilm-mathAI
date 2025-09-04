@@ -53,39 +53,6 @@ def health_check():
         "version": "1.0.0"
     })
 
-# @app.route('/api/ocr', methods=['POST'])
-# def extract_text():
-#     """Extract text from uploaded image"""
-#     try:
-#         data = request.get_json()
-        
-#         if not data:
-#             return jsonify({
-#                 "success": False,
-#                 "error": "No JSON data provided"
-#             }), 400
-        
-#         # Validate image data
-#         image_validation = validation_service.validate_image_data(data.get('image', ''))
-#         print("OK")
-#         if not image_validation['valid']:
-#             return jsonify({
-#                 "success": False,
-#                 "error": image_validation['error']
-#             }), 400
-        
-#         # Extract text
-#         result = math_service.extract_text_from_image(image_validation['cleaned_data'])
-        
-#         return jsonify(result), 200 if result['success'] else 500
-        
-#     except Exception as e:
-#         logger.error(f"OCR endpoint error: {str(e)}")
-#         return jsonify({
-#             "success": False,
-#             "error": "Internal server error"
-#         }), 500
-
 
 @app.route('/api/ocr', methods=['POST'])
 def extract_text():
