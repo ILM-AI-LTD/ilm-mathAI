@@ -76,7 +76,7 @@ def extract_text():
         
         # Extract MIME type from data URL or default to PNG
         image_data = data.get('image', '')
-        mime_type = 'image/png'  # Default
+        # mime_type = 'image/png'  # Default
         
         if image_data.startswith('data:image'):
             # Extract MIME type from data URL (e.g., "data:image/jpeg;base64,...")
