@@ -2,7 +2,7 @@
 
 set -e
 
-echo "Waiting 120 seconds to allow Elastic Beanstalk deployment to settle..."
+echo "Waiting 120 seconds to allow Elastic Beanstalk deployment to settle...."
 sleep 120
 
 # Get current branch name
