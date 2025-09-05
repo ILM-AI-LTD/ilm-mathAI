@@ -3,7 +3,7 @@ name: Python CI/CD - ILM-MATH-AI
 on:
   push:
     branches:
-      - main-1   
+      - main 
 
 env:
   AWS_REGION: eu-west-2
