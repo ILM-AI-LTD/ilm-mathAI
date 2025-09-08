@@ -1,244 +1,213 @@
 """
 Math Evaluation Services
-Core business logic for OCR and math evaluation functionality
 """
-from google import genai
-from PIL import Image
 import os
-import base64
 import json
 import logging
-from typing import Dict, Any, Optional
-from openai import OpenAI
-from prompts import eval_prompt, ocr_prompt
+import time
+import base64
+from typing import Dict, Any
 from dotenv import load_dotenv
+from google import genai
+from openai import OpenAI
+from PIL import Image
+from prompts import eval_prompt, ocr_prompt
+
 load_dotenv()
+
 # Configure logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
+
+# Define constants for model names to avoid magic strings
+GEMINI_FLASH_MODEL = "gemini-2.0-flash"
+GPT_NANO_MODEL = "gpt-5-mini"
 
 class MathEvaluationService:
     """Service class for handling math evaluation operations"""
-    
+
     def __init__(self):
         """Initialize OpenAI client"""
         api_key = os.getenv("OPENAI_API_KEY")
         if not api_key:
             raise ValueError("OPENAI_API_KEY not found in environment variables")
-        else:
-            print("Key is Found")
+        logger.info("OpenAI API key found.")
         self.client = OpenAI(api_key=api_key)
         self.system_prompt = self._get_system_prompt()
-    
+
     def _get_system_prompt(self) -> str:
         """Get the system prompt for evaluation"""
         return eval_prompt
-    
-    # def extract_text_from_image(self, image_data: str, mime_type: str) -> Dict[str, Any]:
-    #     """
-    #     Extract handwritten text from image using OpenAI Vision API
-        
-    #     Args:
-    #         image_data: Base64 encoded image string
-            
-    #     Returns:
-    #         Dict containing extracted text and status
-    #     """
-    #     try:
-    #         logger.info(type(image_data))
-    #         response = self.client.chat.completions.create(
-    #             model="gpt-5",
-    #             messages=[
-    #                 {
-    #                     "role": "user",
-    #                     "content": [
-    #                         {
-    #                             "type": "text",
-    #                             "text": ocr_prompt
-    #                         },
-    #                         {
-    #                             "type": "image_url",
-    #                             "image_url": {
-    #                                 "url": f"data:{mime_type};base64,{image_data}"
-    #                             }
-    #                         }
-    #                     ]
-    #                 }
-    #             ],
-    #             # max_tokens=1000
-    #         )
-            
-    #         extracted_text = response.choices[0].message.content.strip()
-    #         logger.info(f"Successfully extracted text: {extracted_text[:50]}...")
-            
-    #         return {
-    #             "success": True,
-    #             "text": extracted_text,
-    #             "error": None
-    #         }
-            
-    #     except Exception as e:
-    #         logger.error(f"OCR extraction failed: {str(e)}")
-    #         return {
-    #             "success": False,
-    #             "text": None,
-    #             "error": f"Failed to extract text: {str(e)}"
-    #         }
 
     def extract_text_from_image(self, image_data: str) -> Dict[str, Any]:
         """
-        Extract handwritten text from image using OpenAI Vision API
-        
+        Extract handwritten text from image using Google's Gemini API.
+
         Args:
-            image_data: Base64 encoded image string
-            mime_type: MIME type of the image (e.g., 'image/png')
-            
+            image_data: Path to the image file.
+
         Returns:
-            Dict containing extracted text and status
+            A dictionary with success status, extracted text, and error info.
         """
         try:
             client1 = genai.Client()
             img = Image.open(image_data)
-            
+
             response = client1.models.generate_content(
-                model="gemini-2.0-flash",
+                model=GEMINI_FLASH_MODEL,
                 contents=[img, ocr_prompt]
             )
             extracted_text = response.text
-            
-            # extracted_text = response.choices[0].message.content.strip()
-            logger.info(f"Successfully extracted text: {extracted_text[:50]}...")
-            
+
+            logger.info("Successfully extracted text: %s...", extracted_text[:100])
+
             return {
                 "success": True,
                 "text": extracted_text,
                 "error": None
             }
-            
+
+        except FileNotFoundError:
+            logger.error("OCR Error: Image file not found at path: %s", image_data)
+            return {
+                "success": False,
+                "text": None,
+                "error": f"Image file not found: {image_data}"
+            }
         except Exception as e:
-            logger.error(f"OCR extraction failed: {str(e)}")
+            # Catching a broad exception for unexpected API or other errors.
+            logger.error("An unexpected error occurred during OCR: %s", e, exc_info=True)
             return {
                 "success": False,
                 "text": None,
                 "error": f"Failed to extract text: {str(e)}"
             }
-        
+
     def evaluate_math_solution(
-        self, 
-        question: str, 
-        correct_answer: str, 
-        student_work: str, 
+        self,
+        question: str,
+        correct_answer: str,
+        student_work: str,
         step_count: int = 0
     ) -> Dict[str, Any]:
         """
-        Evaluate student's math solution against correct answer
-        
+        Evaluate student's math solution against correct answer.
+
         Args:
-            question: The original math problem
-            correct_answer: The expected correct answer
-            student_work: Student's work/answer
-            step_count: Current step count for tracking
-            
+            question: The original math problem.
+            correct_answer: The expected correct answer.
+            student_work: Student's work/answer.
+            step_count: Current step count for tracking.
+
         Returns:
-            Dict containing evaluation results
+            A dictionary containing evaluation results.
         """
         try:
             user_content = (
                 f"Question: {question}\n"
                 f"Correct Answer: {correct_answer}\n"
                 f"Student's Answer: {student_work}\n"
-                # f"Current Step: {step_count}"
             )
-            
+
             response = self.client.responses.create(
-                model="gpt-5-nano",
-                
+                model=GPT_NANO_MODEL,
                 input=[
                     {
-                        "role":"system",
-                        "content":[
-                            {
-                                "type": "input_text",
-                                "text": self.system_prompt
-                            }
-                        ]
+                        "role": "system",
+                        "content": [{"type": "input_text", "text": self.system_prompt}]
                     },
                     {
                         "role": "user",
-                        "content": [
-                            { 
-                                "type": "input_text", 
-                                "text": user_content
-                            }
-                        ]
+                        "content": [{"type": "input_text", "text": user_content}]
                     }
                 ],
             )
-            
+
             evaluation_text = response.output_text
             # Clean up any markdown formatting
             evaluation_text = evaluation_text.replace('```json', '').replace('```', '').strip()
-            
-            logger.info(f"Successfully evaluated solution for question: {question[:50]}...\n{evaluation_text[:50]}...")
-            
+
+            logger.info("Successfully evaluated solution for question: %s...", evaluation_text[:100])
+
+            # Use a different name than the built-in 'eval'
+            evaluation_data = json.loads(evaluation_text)
             ret = {
                 "success": True,
-                "nextStepCount": step_count+1,
+                "nextStepCount": step_count + 1,
                 "error": None
             }
-            eval = json.loads(evaluation_text)
-            ret.update(eval)
+            ret.update(evaluation_data)
             return ret
-            
-        except Exception as e:
-            logger.error(f"Evaluation failed: {str(e)}")
+
+        except json.JSONDecodeError as e:
+            logger.error("Evaluation failed: Could not decode JSON from API response. Error: %s", e)
             return {
                 "success": False,
                 "evaluation": None,
-                "hint":None,
+                "hint": None,
                 "nextStepCount": step_count + 1,
-                "error": f"Evaluation failed: {str(e)}"
+                "error": f"Invalid JSON response from evaluation API: {e}"
             }
-    
+        except Exception as e:
+            logger.error("An unexpected error occurred during evaluation: %s", e, exc_info=True)
+            return {
+                "success": False,
+                "evaluation": None,
+                "hint": None,
+                "nextStepCount": step_count + 1,
+                "error": f"An unexpected evaluation error occurred: {str(e)}"
+            }
+
     def process_full_evaluation(
         self,
         image_data: str,
         question: str,
         correct_answer: str,
         step_count: int,
-        # mime_type: str,  
     ) -> Dict[str, Any]:
         """
-        Perform OCR + Evaluation in one operation
-        
+        Perform OCR + Evaluation in one operation.
+
         Args:
-            image_data: Base64 encoded image
-            question: Math question
-            correct_answer: Expected answer
-            step_count: Current step count
-            
+            image_data: Path to the image file.
+            question: Math question.
+            correct_answer: Expected answer.
+            step_count: Current step count.
+
         Returns:
-            Combined OCR and evaluation results
+            Combined OCR and evaluation results.
         """
         # Step 1: Extract text
+        start_time = time.time()
         ocr_result = self.extract_text_from_image(image_data)
-        
+        ocr_duration = time.time() - start_time
+        logger.info("OCR processing time: %.2f seconds", ocr_duration)
+
         if not ocr_result['success']:
+            logger.info("OCR Failed")
             return {
                 "success": False,
                 "error": f"OCR failed: {ocr_result['error']}",
                 "extracted_text": None,
                 "evaluation": None
             }
-        
+
         # Step 2: Evaluate the extracted text
+        start_time = time.time()
         eval_result = self.evaluate_math_solution(
-            question, 
-            correct_answer, 
-            ocr_result['text'], 
+            question,
+            correct_answer,
+            ocr_result['text'],
             step_count
         )
-        
+        eval_duration = time.time() - start_time
+        # logger.info("Successfully extracted text: %s...", eval_result)
+        print(eval_result)
+        logger.info("Evaluation processing time: %.2f seconds", eval_duration)
+
         if not eval_result['success']:
             return {
                 "success": False,
@@ -246,101 +215,101 @@ class MathEvaluationService:
                 "extracted_text": ocr_result['text'],
                 "evaluation": None,
                 "nextStepCount": eval_result['nextStepCount'],
-                "hint":None
+                "hint": None
             }
-        if "correct" not in eval_result['hint']:
-            flag = False
-        else:
-            flag = True
+
+        # Determine if the process is finished based on the hint content
+        is_finished = 'correct' in eval_result.get('hint', '').lower()
+
         return {
             "success": True,
             "extracted_text": ocr_result['text'],
-            "evaluation": eval_result['evaluation'],
+            "evaluation": eval_result.get('evaluation'),
             "nextStepCount": eval_result['nextStepCount'],
-            "hint": eval_result['hint'],
+            "hint": eval_result.get('hint'),
             "error": None,
-            "is_finished": flag
+            "is_finished": is_finished
         }
 
 
 class ValidationService:
     """Service for input validation"""
-    
+
     # Supported image MIME types for OpenAI Vision API
     SUPPORTED_IMAGE_TYPES = {
         'image/png',
-        'image/jpeg', 
+        'image/jpeg',
         'image/jpg',
         'image/gif',
         'image/webp'
     }
-    
+
     @staticmethod
     def validate_image_data(image_data: str) -> Dict[str, Any]:
         """Validate base64 image data"""
         if not image_data:
             return {"valid": False, "error": "Image data is required"}
-        
+
         # Remove data URL prefix if present
         if image_data.startswith('data:image'):
-            image_data = image_data.split(',')[1]
-        
+            image_data = image_data.split(',', 1)[1]
+
         # Basic base64 validation
         try:
-            import base64
-            base64.b64decode(image_data)
+            base64.b64decode(image_data, validate=True)
             return {"valid": True, "cleaned_data": image_data, "error": None}
-        except Exception:
-            return {"valid": False, "error": "Invalid image data format"}
-    
+        except (ValueError, TypeError):
+            return {"valid": False, "error": "Invalid base64 image data format"}
+
     @staticmethod
     def validate_mime_type(mime_type: str) -> Dict[str, Any]:
         """Validate image MIME type"""
         if not mime_type:
             return {"valid": False, "error": "MIME type is required"}
-        
+
         if mime_type not in ValidationService.SUPPORTED_IMAGE_TYPES:
+            supported_types_str = ', '.join(ValidationService.SUPPORTED_IMAGE_TYPES)
             return {
-                "valid": False, 
-                "error": f"Unsupported MIME type: {mime_type}. Supported types: {', '.join(ValidationService.SUPPORTED_IMAGE_TYPES)}"
+                "valid": False,
+                "error": f"Unsupported MIME type: {mime_type}. Supported types: {supported_types_str}"
             }
-        
+
         return {"valid": True, "error": None}
-    
+
     @staticmethod
     def validate_evaluation_request(data: Dict[str, Any]) -> Dict[str, Any]:
         """Validate evaluation request data"""
         required_fields = ['question', 'correct_answer', 'student_answer']
         missing_fields = [field for field in required_fields if not data.get(field)]
-        
-        if missing_fields:
-            return {
-                "valid": False, 
-                "error": f"Missing required fields: {', '.join(missing_fields)}"
-            }
-        
-        return {"valid": True, "error": None}
-    
-    @staticmethod
-    def validate_full_evaluation_request(data: Dict[str, Any]) -> Dict[str, Any]:
-        """Validate full evaluation request data"""
-        required_fields = ['image', 'question', 'correct_answer']
-        missing_fields = [field for field in required_fields if not data.get(field)]
-        
+
         if missing_fields:
             return {
                 "valid": False,
                 "error": f"Missing required fields: {', '.join(missing_fields)}"
             }
-        
+
+        return {"valid": True, "error": None}
+
+    @staticmethod
+    def validate_full_evaluation_request(data: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate full evaluation request data"""
+        required_fields = ['image', 'question', 'correct_answer']
+        missing_fields = [field for field in required_fields if not data.get(field)]
+
+        if missing_fields:
+            return {
+                "valid": False,
+                "error": f"Missing required fields: {', '.join(missing_fields)}"
+            }
+
         # Validate image
         image_validation = ValidationService.validate_image_data(data['image'])
         if not image_validation['valid']:
             return image_validation
-        
+
         return {"valid": True, "error": None}
 
 
-# Create service instances
+# Create service instances for use in other modules
 math_service = MathEvaluationService()
 validation_service = ValidationService()

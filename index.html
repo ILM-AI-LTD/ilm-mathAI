@@ -1,290 +1,251 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Math Evaluation Frontend</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>Math AI Evaluator</title>
     <style>
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f4f7f9;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 2rem;
+            min-height: 100vh;
+            margin: 0;
         }
-        /* Simple spinner */
-        .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border-left-color: #09f;
-            animation: spin 1s ease infinite;
+        main {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        h1, h2, h3, h4 {
+            color: #2c3e50;
         }
-        /* Custom scrollbar for result previews */
-        pre::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+        h2 {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
         }
-        pre::-webkit-scrollbar-track {
-            background: #2d3748;
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
-        pre::-webkit-scrollbar-thumb {
-            background-color: #4a5568;
-            border-radius: 20px;
-            border: 2px solid #2d3748;
+        label {
+            font-weight: 600;
+        }
+        input[type="text"], input[type="file"] {
+            padding: 0.75rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 0.75rem 1.5rem;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color: 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #a9cce3;
+            cursor: not-allowed;
+        }
+        #results-container {
+            margin-top: 2rem;
+        }
+        #image-preview {
+            max-width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 1rem;
+        }
+        #status-message {
+            text-align: center;
+            font-weight: 600;
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 4px;
+            display: none; /* Hidden by default */
+        }
+        #status-message.loading {
+            display: block;
+            background-color: #eaf2f8;
+            color: #3498db;
+        }
+        /* MODIFIED: Styles for the new report format */
+        #results-output {
+            background-color: #f8f9f9;
+            padding: 1.5rem;
+            border-radius: 4px;
+            border: 1px solid #e5e7e9;
+        }
+        #results-output h3 {
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+        .result-error {
+            color: #c0392b; /* Red */
+        }
+        #results-output p {
+            line-height: 1.6;
+            font-size: 1rem;
+            white-space: pre-wrap; /* Preserve line breaks from the response */
+        }
+        .hint-box {
+            background-color: #eaf2f8;
+            border-left: 4px solid #3498db;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            border-radius: 4px;
+        }
+        .hint-box p {
+            margin: 0;
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-200 flex items-center justify-center min-h-screen p-4">
-
-    <div class="w-full max-w-4xl mx-auto bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8">
-        
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <h1 class="text-3xl md:text-4xl font-bold text-white">Math Evaluation System</h1>
-            <p class="text-gray-400 mt-2">A frontend interface to test the Flask evaluation API.</p>
-        </div>
-
-        <!-- Tabs Navigation -->
-        <div class="mb-6 border-b border-gray-700">
-            <nav class="flex space-x-4" aria-label="Tabs">
-                <button id="tab-ocr" class="tab-btn active text-white bg-gray-700/50 px-4 py-2.5 font-medium text-sm rounded-t-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    OCR Only
-                </button>
-                <button id="tab-evaluate" class="tab-btn inactive text-gray-400 hover:bg-gray-700/50 px-4 py-2.5 font-medium text-sm rounded-t-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    Manual Evaluation
-                </button>
-                <button id="tab-full" class="tab-btn inactive text-gray-400 hover:bg-gray-700/50 px-4 py-2.5 font-medium text-sm rounded-t-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    Full Evaluation
-                </button>
-            </nav>
-        </div>
-
-        <!-- Content Panels -->
-        <div id="panels">
-            <!-- OCR Panel -->
-            <div id="panel-ocr" class="panel-content">
-                <form id="ocr-form" class="space-y-6">
-                    <div>
-                        <label for="ocr-image" class="block text-sm font-medium text-gray-300 mb-2">Upload Image</label>
-                        <input type="file" id="ocr-image" name="image" accept="image/*" required class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition">
-                    </div>
-                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-blue-500">
-                        Extract Text
-                    </button>
-                </form>
-                <div id="ocr-result-container" class="mt-6 hidden"></div>
+<body>
+    <main>
+        <h1>Math AI Evaluator</h1>
+        <form id="eval-form">
+            <div>
+                <label for="question">Question</label>
+                <input type="text" id="question" name="question" required placeholder="e.g., What is 2 + 2?">
             </div>
-
-            <!-- Manual Evaluation Panel -->
-            <div id="panel-evaluate" class="panel-content hidden">
-                <form id="evaluate-form" class="space-y-4">
-                    <div>
-                        <label for="eval-question" class="block text-sm font-medium text-gray-300">Question</label>
-                        <input type="text" id="eval-question" required class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., 2x + 5 = 15">
-                    </div>
-                    <div>
-                        <label for="eval-correct" class="block text-sm font-medium text-gray-300">Correct Answer</label>
-                        <input type="text" id="eval-correct" required class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., x = 5">
-                    </div>
-                    <div>
-                        <label for="eval-student" class="block text-sm font-medium text-gray-300">Student's Work</label>
-                        <textarea id="eval-student" rows="4" required class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Enter the student's full solution here..."></textarea>
-                    </div>
-                    <button type="submit" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-green-500">
-                        Evaluate
-                    </button>
-                </form>
-                <div id="evaluate-result-container" class="mt-6 hidden"></div>
+            <div>
+                <label for="correct-answer">Correct Answer</label>
+                <input type="text" id="correct-answer" name="correct_answer" required placeholder="e.g., 4">
             </div>
-
-            <!-- Full Evaluation Panel -->
-            <div id="panel-full" class="panel-content hidden">
-                <form id="full-evaluation-form" class="space-y-6">
-                    <div>
-                        <label for="full-image" class="block text-sm font-medium text-gray-300 mb-2">Upload Student's Work Image</label>
-                        <input type="file" id="full-image" name="image" accept="image/*" required class="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700 transition">
-                    </div>
-                    <div>
-                        <label for="full-question" class="block text-sm font-medium text-gray-300">Question</label>
-                        <input type="text" id="full-question" name="question" required class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., Solve for y: 3y - 7 = 11">
-                    </div>
-                    <div>
-                        <label for="full-correct" class="block text-sm font-medium text-gray-300">Correct Answer</label>
-                        <input type="text" id="full-correct" name="correct_answer" required class="mt-1 block w-full bg-gray-700 border border-gray-600 rounded-md shadow-sm py-2 px-3 text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="e.g., y = 6">
-                    </div>
-                    <button type="submit" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-purple-500">
-                        Run Full Evaluation
-                    </button>
-                </form>
-                <div id="full-result-container" class="mt-6 hidden"></div>
+            <div>
+                <label for="image-file">Student's Work (Image)</label>
+                <input type="file" id="image-file" name="image" accept="image/*" required>
+                <img id="image-preview" src="" alt="Image preview" style="display: none;">
             </div>
+            <button type="submit" id="submit-button">Evaluate</button>
+        </form>
+
+        <div id="results-container" style="display: none;">
+            <div id="status-message"></div>
+            <h2>Evaluation Results</h2>
+            <div id="results-output"></div>
         </div>
-    </div>
+    </main>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- IMPORTANT ---
-            // Change this URL to your Flask backend's address
-            const API_BASE_URL = 'http://127.0.0.1:5000';
+        const form = document.getElementById('eval-form');
+        const submitButton = document.getElementById('submit-button');
+        const resultsContainer = document.getElementById('results-container');
+        const resultsOutput = document.getElementById('results-output');
+        const statusMessage = document.getElementById('status-message');
+        const imageFile = document.getElementById('image-file');
+        const imagePreview = document.getElementById('image-preview');
 
-            const tabs = document.querySelectorAll('.tab-btn');
-            const panels = document.querySelectorAll('.panel-content');
-
-            // Tab switching logic
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    tabs.forEach(item => {
-                        item.classList.remove('active', 'text-white', 'bg-gray-700/50');
-                        item.classList.add('inactive', 'text-gray-400', 'hover:bg-gray-700/50');
-                    });
-                    tab.classList.add('active', 'text-white', 'bg-gray-700/50');
-                    tab.classList.remove('inactive', 'text-gray-400', 'hover:bg-gray-700/50');
-
-                    const targetPanelId = 'panel-' + tab.id.split('-')[1];
-                    panels.forEach(panel => {
-                        if (panel.id === targetPanelId) {
-                            panel.classList.remove('hidden');
-                        } else {
-                            panel.classList.add('hidden');
-                        }
-                    });
-                });
-            });
-
-            const ocrForm = document.getElementById('ocr-form');
-            const evaluateForm = document.getElementById('evaluate-form');
-            const fullEvaluationForm = document.getElementById('full-evaluation-form');
-
-            const ocrResultContainer = document.getElementById('ocr-result-container');
-            const evaluateResultContainer = document.getElementById('evaluate-result-container');
-            const fullResultContainer = document.getElementById('full-result-container');
-
-            // --- Helper function to display results ---
-            const displayResult = (container, data, error = false) => {
-                container.classList.remove('hidden');
-                let content;
-                if (error) {
-                    const errorMessage = data.error || 'An unknown error occurred.';
-                    content = `
-                        <div class="bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg relative" role="alert">
-                            <strong class="font-bold">Error:</strong>
-                            <span class="block sm:inline">${errorMessage}</span>
-                        </div>`;
-                } else {
-                    content = `
-                        <div class="bg-gray-900/50 p-4 rounded-lg">
-                            <h3 class="text-lg font-semibold text-gray-300 mb-2">Result:</h3>
-                            <pre class="bg-gray-900 text-green-400 text-sm p-4 rounded-md overflow-x-auto"><code>${JSON.stringify(data, null, 2)}</code></pre>
-                        </div>`;
-                }
-                container.innerHTML = content;
-            };
-
-            // --- Helper function for loading state ---
-            const showLoading = (container) => {
-                container.classList.remove('hidden');
-                container.innerHTML = `
-                    <div class="flex justify-center items-center p-4">
-                        <div class="spinner"></div>
-                        <span class="ml-3 text-gray-400">Processing...</span>
-                    </div>
-                `;
-            };
-
-            // --- OCR Form Submission ---
-            ocrForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                showLoading(ocrResultContainer);
-
-                const imageFile = document.getElementById('ocr-image').files[0];
-                if (!imageFile) {
-                    displayResult(ocrResultContainer, { error: 'Please select an image file.' }, true);
-                    return;
-                }
-
-                // Convert image to base64
+        imageFile.addEventListener('change', () => {
+            const file = imageFile.files[0];
+            if (file) {
                 const reader = new FileReader();
-                reader.readAsDataURL(imageFile);
-                reader.onload = async () => {
-                    const base64Image = reader.result;
-                    try {
-                        const response = await fetch(`${API_BASE_URL}/api/ocr`, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ image: base64Image })
-                        });
-                        
-                        const result = await response.json();
-                        displayResult(ocrResultContainer, result, !response.ok);
-
-                    } catch (error) {
-                        console.error('OCR Error:', error);
-                        displayResult(ocrResultContainer, { error: 'Failed to connect to the server.' }, true);
-                    }
+                reader.onload = (e) => {
+                    imagePreview.src = e.target.result;
+                    imagePreview.style.display = 'block';
                 };
-                reader.onerror = (error) => {
-                    console.error('File Reader Error:', error);
-                    displayResult(ocrResultContainer, { error: 'Failed to read the image file.' }, true);
-                };
-            });
+                reader.readAsDataURL(file);
+            }
+        });
 
-            // --- Manual Evaluation Form Submission ---
-            evaluateForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                showLoading(evaluateResultContainer);
+        // MODIFIED: This function now parses the new JSON structure
+        function displayResults(data) {
+            resultsOutput.innerHTML = ''; // Clear previous results
 
-                const payload = {
-                    question: document.getElementById('eval-question').value,
-                    correct_answer: document.getElementById('eval-correct').value,
-                    student_answer: document.getElementById('eval-student').value,
-                    nextStepCount: 0 // Default value
-                };
+            // Handle API errors first
+            if (data.error) {
+                const errorHeader = document.createElement('h3');
+                errorHeader.textContent = 'An Error Occurred';
+                errorHeader.className = 'result-error';
+                resultsOutput.appendChild(errorHeader);
+                
+                const errorText = document.createElement('p');
+                errorText.textContent = data.error;
+                resultsOutput.appendChild(errorText);
+                return;
+            }
 
-                try {
-                    const response = await fetch(`${API_BASE_URL}/api/evaluate`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    const result = await response.json();
-                    displayResult(evaluateResultContainer, result, !response.ok);
-                } catch (error) {
-                    console.error('Evaluation Error:', error);
-                    displayResult(evaluateResultContainer, { error: 'Failed to connect to the server.' }, true);
+            // 1. Display the main evaluation feedback
+            const evalHeader = document.createElement('h3');
+            evalHeader.textContent = 'Feedback';
+            resultsOutput.appendChild(evalHeader);
+
+            const evalText = document.createElement('p');
+            evalText.textContent = data.evaluation || 'No evaluation provided.';
+            resultsOutput.appendChild(evalText);
+
+            // 2. Display the hint if it exists
+            if (data.hint) {
+                const hintBox = document.createElement('div');
+                hintBox.className = 'hint-box';
+
+                const hintHeader = document.createElement('h4');
+                hintHeader.textContent = '💡 Next Step';
+                hintHeader.style.marginTop = '0';
+                hintBox.appendChild(hintHeader);
+
+                const hintText = document.createElement('p');
+                hintText.textContent = data.hint;
+                hintBox.appendChild(hintText);
+                
+                resultsOutput.appendChild(hintBox);
+            }
+        }
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            submitButton.disabled = true;
+            statusMessage.textContent = 'Processing... Please wait.';
+            statusMessage.className = 'loading';
+            resultsContainer.style.display = 'block';
+            resultsOutput.innerHTML = '';
+
+            const formData = new FormData(form);
+            formData.append('currentStepCount', '0');
+            const val = "http://ilm-math-ai.eu-west-2.elasticbeanstalk.com/api/full_evaluation"
+            // const val = 'http://127.0.0.1:5000/api/full_evaluation'
+            try {
+                const response = await fetch(val, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
                 }
-            });
-            
-            // --- Full Evaluation Form Submission ---
-            fullEvaluationForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                showLoading(fullResultContainer);
 
-                const formData = new FormData();
-                formData.append('image', document.getElementById('full-image').files[0]);
-                formData.append('question', document.getElementById('full-question').value);
-                formData.append('correct_answer', document.getElementById('full-correct').value);
-                formData.append('currentStepCount', 0); // Default value
+                const result = await response.json();
+                
+                // Call the updated display function
+                displayResults(result);
+                statusMessage.style.display = 'none';
 
-                try {
-                    // Note: When using FormData with fetch, you don't set the Content-Type header.
-                    // The browser does it automatically with the correct boundary.
-                    const response = await fetch(`${API_BASE_URL}/api/full_evaluation`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const result = await response.json();
-                    displayResult(fullResultContainer, result, !response.ok);
-                } catch (error) {
-                    console.error('Full Evaluation Error:', error);
-                    displayResult(fullResultContainer, { error: 'Failed to connect to the server.' }, true);
-                }
-            });
+            } catch (error) {
+                console.error('Error:', error);
+                resultsOutput.innerHTML = `<h3 class="result-error">Request Failed</h3><p>Could not connect to the evaluation service. Please check the console for details.</p>`;
+            } finally {
+                submitButton.disabled = false;
+            }
         });
     </script>
-
 </body>
-</html>
+</html> -->
