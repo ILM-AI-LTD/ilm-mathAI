@@ -23,4 +23,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 EXPOSE 5000
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "mathAI:app"]
+
+# 🔑 Gunicorn config: 120s timeout, 4 workers, bind to all interfaces
+CMD ["gunicorn", "mathAI:app", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "2", "--timeout", "180"]
