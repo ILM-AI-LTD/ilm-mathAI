@@ -91,7 +91,8 @@ class MathEvaluationService:
         question: str,
         correct_answer: str,
         student_work: str,
-        step_count: int = 0
+        step_count: int,
+        prev_history: str
     ) -> Dict[str, Any]:
         """
         Evaluate student's math solution against correct answer.
@@ -109,7 +110,8 @@ class MathEvaluationService:
             user_content = (
                 f"Question: {question}\n"
                 f"Correct Answer: {correct_answer}\n"
-                f"Student's Answer: {student_work}\n"
+                f"Students previous steps (Ignore if this answers is wrong): {prev_history}\n"
+                f"Student's Current Answer: {student_work}\n"
             )
 
             response = self.client.responses.create(
@@ -124,6 +126,8 @@ class MathEvaluationService:
                         "content": [{"type": "input_text", "text": user_content}]
                     }
                 ],
+                text={ "verbosity": "low" },
+                reasoning={ "effort": "low" },
             )
 
             evaluation_text = response.output_text
@@ -167,6 +171,7 @@ class MathEvaluationService:
         question: str,
         correct_answer: str,
         step_count: int,
+        prev_history: str
     ) -> Dict[str, Any]:
         """
         Perform OCR + Evaluation in one operation.
@@ -201,11 +206,14 @@ class MathEvaluationService:
             question,
             correct_answer,
             ocr_result['text'],
-            step_count
+            step_count, 
+            prev_history
         )
         eval_duration = time.time() - start_time
+        cur_history = prev_history + "\n" + ocr_result['text']
+        # For debugging purposes, you might want to log the full extracted text and evaluation result
         # logger.info("Successfully extracted text: %s...", eval_result)
-        print(eval_result)
+        # print(eval_result)
         logger.info("Evaluation processing time: %.2f seconds", eval_duration)
 
         if not eval_result['success']:
@@ -215,7 +223,8 @@ class MathEvaluationService:
                 "extracted_text": ocr_result['text'],
                 "evaluation": None,
                 "nextStepCount": eval_result['nextStepCount'],
-                "hint": None
+                "hint": None,
+                "history": cur_history
             }
 
         # Determine if the process is finished based on the hint content
@@ -228,7 +237,8 @@ class MathEvaluationService:
             "nextStepCount": eval_result['nextStepCount'],
             "hint": eval_result.get('hint'),
             "error": None,
-            "is_finished": is_finished
+            "is_finished": is_finished,
+            "history": cur_history
         }
 
 

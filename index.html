@@ -1,147 +1,275 @@
-<!-- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Math AI Evaluator</title>
+    <title>Math AI Evaluator ✨</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        MathJax = {
+          tex: {
+            inlineMath: [['$', '$'], ['\\(', '\\)']]
+          },
+          svg: {
+            fontCache: 'global'
+          }
+        };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+    
     <style>
+        /* CSS Variables for easy theming */
+        :root {
+            --primary-color: #4a90e2;
+            --primary-hover: #357abd;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --light-bg: #f8f9fa;
+            --dark-text: #2c3e50;
+            --light-text: #5d6d7e;
+            --border-color: #e0e0e0;
+            --shadow-color: rgba(0, 0, 0, 0.08);
+            --gradient-start: #eaf2f8;
+            --gradient-end: #ffffff;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f4f7f9;
-            color: #333;
+            background-image: linear-gradient(120deg, var(--gradient-start), var(--gradient-end));
+            color: var(--dark-text);
             display: flex;
             justify-content: center;
             align-items: flex-start;
             padding: 2rem;
             min-height: 100vh;
             margin: 0;
+            box-sizing: border-box;
         }
         main {
             background-color: #fff;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px var(--shadow-color);
+            border: 1px solid var(--border-color);
             width: 100%;
-            max-width: 600px;
+            max-width: 650px;
+            transition: all 0.3s ease;
         }
-        h1, h2, h3, h4 {
-            color: #2c3e50;
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
         }
-        h2 {
-            border-bottom: 2px solid #eee;
-            padding-bottom: 0.5rem;
-            margin-bottom: 1rem;
+        .header h1 {
+            font-size: 2rem;
+            color: var(--dark-text);
+            margin: 0 0 0.5rem 0;
+        }
+        .header i {
+            color: var(--primary-color);
+        }
+        .header p {
+            color: var(--light-text);
+            margin: 0;
         }
         form {
             display: flex;
             flex-direction: column;
-            gap: 1rem;
+            gap: 1.5rem;
         }
         label {
             font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
         }
-        input[type="text"], input[type="file"] {
-            padding: 0.75rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
+        input[type="text"] {
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
             font-size: 1rem;
             width: 100%;
             box-sizing: border-box;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+        .file-drop-area {
+            position: relative;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            text-align: center;
+            color: var(--light-text);
+            cursor: pointer;
+            transition: border-color 0.3s, background-color 0.3s;
+        }
+        .file-drop-area.dragover {
+            border-color: var(--primary-color);
+            background-color: #f0f6ff;
+        }
+        .file-drop-area input[type="file"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .file-drop-area .icon {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 1rem;
+        }
+        #image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-top: 1rem;
+            object-fit: contain;
         }
         button {
-            padding: 0.75rem 1.5rem;
-            background-color: #3498db;
+            padding: 0.9rem 1.5rem;
+            background-color: var(--primary-color);
             color: white;
             border: none;
-            border-radius: 4px;
-            font-size: 1rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color: 0.3s;
+            transition: background-color 0.3s, transform 0.2s;
         }
-        button:hover {
-            background-color: #2980b9;
+        button:hover:not(:disabled) {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
         }
         button:disabled {
             background-color: #a9cce3;
             cursor: not-allowed;
         }
         #results-container {
-            margin-top: 2rem;
+            margin-top: 2.5rem;
         }
-        #image-preview {
-            max-width: 100%;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-top: 1rem;
+        .spinner-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
         }
-        #status-message {
-            text-align: center;
-            font-weight: 600;
-            margin-top: 1rem;
-            padding: 1rem;
-            border-radius: 4px;
-            display: none; /* Hidden by default */
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border-left-color: var(--primary-color);
+            animation: spin 1s ease infinite;
         }
-        #status-message.loading {
-            display: block;
-            background-color: #eaf2f8;
-            color: #3498db;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        /* MODIFIED: Styles for the new report format */
         #results-output {
-            background-color: #f8f9f9;
+            background-color: var(--light-bg);
             padding: 1.5rem;
-            border-radius: 4px;
-            border: 1px solid #e5e7e9;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
         }
         #results-output h3 {
             margin-top: 0;
             font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
         }
-        .result-error {
-            color: #c0392b; /* Red */
+        #results-output h3.correct { color: var(--success-color); }
+        #results-output h3.incorrect { color: var(--error-color); }
+
+        /* ADDED: Styles for new output sections */
+        #results-output h4 {
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: var(--dark-text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
         }
         #results-output p {
-            line-height: 1.6;
+            line-height: 1.7;
             font-size: 1rem;
-            white-space: pre-wrap; /* Preserve line breaks from the response */
+            color: var(--light-text);
         }
+        .evaluation-content, .extracted-text-box {
+            background-color: #fdfdfd;
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        hr {
+            border: none;
+            border-top: 1px solid #e9ecef;
+            margin: 2rem 0;
+        }
+        /* END ADDED STYLES */
+
         .hint-box {
             background-color: #eaf2f8;
-            border-left: 4px solid #3498db;
-            padding: 1rem;
+            border-left: 4px solid var(--primary-color);
+            padding: 1.25rem;
             margin-top: 1.5rem;
             border-radius: 4px;
         }
+        .hint-box h4 {
+            margin: 0 0 0.5rem 0;
+            color: var(--dark-text);
+        }
         .hint-box p {
             margin: 0;
+            color: var(--light-text);
         }
     </style>
 </head>
 <body>
     <main>
-        <h1>Math AI Evaluator</h1>
+        <div class="header">
+            <h1><i class="fa-solid fa-square-root-variable"></i> Math AI Evaluator</h1>
+            <p>Upload a student's work to get instant, AI-powered feedback.</p>
+        </div>
+
         <form id="eval-form">
             <div>
                 <label for="question">Question</label>
-                <input type="text" id="question" name="question" required placeholder="e.g., What is 2 + 2?">
+                <input type="text" id="question" name="question" required placeholder="e.g., Solve for x: 2x + 5 = 15">
             </div>
             <div>
                 <label for="correct-answer">Correct Answer</label>
-                <input type="text" id="correct-answer" name="correct_answer" required placeholder="e.g., 4">
+                <input type="text" id="correct-answer" name="correct_answer" required placeholder="e.g., 5">
             </div>
+            
             <div>
                 <label for="image-file">Student's Work (Image)</label>
-                <input type="file" id="image-file" name="image" accept="image/*" required>
-                <img id="image-preview" src="" alt="Image preview" style="display: none;">
+                <div class="file-drop-area">
+                    <input type="file" id="image-file" name="image" accept="image/*" required>
+                    <div class="icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                    <span class="file-message">Drag & drop an image here, or click to select</span>
+                    <img id="image-preview" src="" alt="Image preview" style="display: none;">
+                </div>
             </div>
+
             <button type="submit" id="submit-button">Evaluate</button>
         </form>
 
         <div id="results-container" style="display: none;">
-            <div id="status-message"></div>
-            <h2>Evaluation Results</h2>
+             <div id="status-message"></div>
             <div id="results-output"></div>
         </div>
     </main>
@@ -152,12 +280,38 @@
         const resultsContainer = document.getElementById('results-container');
         const resultsOutput = document.getElementById('results-output');
         const statusMessage = document.getElementById('status-message');
+        
+        const fileDropArea = document.querySelector('.file-drop-area');
         const imageFile = document.getElementById('image-file');
         const imagePreview = document.getElementById('image-preview');
+        const fileMessage = document.querySelector('.file-message');
 
-        imageFile.addEventListener('change', () => {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileDropArea.addEventListener(eventName, e => {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+        });
+        
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileDropArea.addEventListener(eventName, () => fileDropArea.classList.add('dragover'));
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileDropArea.addEventListener(eventName, () => fileDropArea.classList.remove('dragover'));
+        });
+
+        fileDropArea.addEventListener('drop', e => {
+            imageFile.files = e.dataTransfer.files;
+            handleFileChange();
+        });
+
+        imageFile.addEventListener('change', handleFileChange);
+
+        function handleFileChange() {
             const file = imageFile.files[0];
             if (file) {
+                fileMessage.textContent = file.name;
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     imagePreview.src = e.target.result;
@@ -165,64 +319,79 @@
                 };
                 reader.readAsDataURL(file);
             }
-        });
+        }
 
-        // MODIFIED: This function now parses the new JSON structure
+        // 2. UPDATED: `displayResults` function to show all fields
         function displayResults(data) {
-            resultsOutput.innerHTML = ''; // Clear previous results
+            let content = '';
 
-            // Handle API errors first
-            if (data.error) {
-                const errorHeader = document.createElement('h3');
-                errorHeader.textContent = 'An Error Occurred';
-                errorHeader.className = 'result-error';
-                resultsOutput.appendChild(errorHeader);
-                
-                const errorText = document.createElement('p');
-                errorText.textContent = data.error;
-                resultsOutput.appendChild(errorText);
-                return;
+            if (data.error && data.error !== null) {
+                content = `
+                    <h3 class="incorrect"><i class="fa-solid fa-triangle-exclamation"></i> An Error Occurred</h3>
+                    <p>${data.error}</p>
+                `;
+            } else {
+                const isCorrect = data.is_finished;
+                const resultIcon = isCorrect ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-circle-xmark"></i>';
+                const resultClass = isCorrect ? 'correct' : 'incorrect';
+
+                // Main Evaluation Feedback
+                content += `
+                    <h3 class="${resultClass}">${resultIcon} AI Evaluation</h3>
+                    <div class="evaluation-content">${data.evaluation || 'No evaluation provided.'}</div>
+                `;
+
+                // Hint Box
+                if (data.hint) {
+                    content += `
+                        <div class="hint-box">
+                            <h4>💡 Hint</h4>
+                            <p>${data.hint}</p>
+                        </div>
+                    `;
+                }
+
+                // Extracted Text from Image
+                if (data.extracted_text) {
+                     content += `
+                        <hr>
+                        <h4><i class="fa-solid fa-magnifying-glass"></i> Extracted Text from Image</h4>
+                        <div class="extracted-text-box">${data.extracted_text}</div>
+                    `;
+                }
+
+                // Other metadata
+                content += `
+                    <hr>
+                    <h4><i class="fa-solid fa-circle-info"></i> Request Details</h4>
+                    <p style="color: #2c3e50;">
+                        <strong>API Success:</strong> ${data.success}<br>
+                        <strong>Is Finished:</strong> ${data.is_finished}<br>
+                        <strong>Next Step Count:</strong> ${data.nextStepCount}
+                    </p>
+                `;
             }
+            resultsOutput.innerHTML = content;
 
-            // 1. Display the main evaluation feedback
-            const evalHeader = document.createElement('h3');
-            evalHeader.textContent = 'Feedback';
-            resultsOutput.appendChild(evalHeader);
-
-            const evalText = document.createElement('p');
-            evalText.textContent = data.evaluation || 'No evaluation provided.';
-            resultsOutput.appendChild(evalText);
-
-            // 2. Display the hint if it exists
-            if (data.hint) {
-                const hintBox = document.createElement('div');
-                hintBox.className = 'hint-box';
-
-                const hintHeader = document.createElement('h4');
-                hintHeader.textContent = '💡 Next Step';
-                hintHeader.style.marginTop = '0';
-                hintBox.appendChild(hintHeader);
-
-                const hintText = document.createElement('p');
-                hintText.textContent = data.hint;
-                hintBox.appendChild(hintText);
-                
-                resultsOutput.appendChild(hintBox);
+            // Tell MathJax to typeset the new content
+            if (window.MathJax) {
+                MathJax.typesetPromise([resultsOutput]).catch((err) => console.error('MathJax typesetting failed:', err));
             }
         }
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
             submitButton.disabled = true;
-            statusMessage.textContent = 'Processing... Please wait.';
-            statusMessage.className = 'loading';
+            
+            statusMessage.innerHTML = '<div class="spinner-container"><div class="spinner"></div></div>';
             resultsContainer.style.display = 'block';
-            resultsOutput.innerHTML = '';
+            resultsOutput.innerHTML = ''; 
 
             const formData = new FormData(form);
             formData.append('currentStepCount', '0');
-            const val = "http://ilm-math-ai.eu-west-2.elasticbeanstalk.com/api/full_evaluation"
-            // const val = 'http://127.0.0.1:5000/api/full_evaluation'
+            // const val = "https://platform.math.ilmino.com/api/full_evaluation";
+            const val = "http://127.0.0.1:5000/api/full_evaluation";
+            
             try {
                 const response = await fetch(val, {
                     method: 'POST',
@@ -230,22 +399,26 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
+                    const errorData = await response.json().catch(() => ({ detail: 'Server returned an invalid response.' }));
+                    throw new Error(`HTTP error! Status: ${response.status} - ${errorData.detail || 'Unknown error'}`);
                 }
 
                 const result = await response.json();
-                
-                // Call the updated display function
+                statusMessage.innerHTML = '';
                 displayResults(result);
-                statusMessage.style.display = 'none';
 
             } catch (error) {
                 console.error('Error:', error);
-                resultsOutput.innerHTML = `<h3 class="result-error">Request Failed</h3><p>Could not connect to the evaluation service. Please check the console for details.</p>`;
+                statusMessage.innerHTML = '';
+                resultsOutput.innerHTML = `
+                    <h3 class="incorrect"><i class="fa-solid fa-server"></i> Request Failed</h3>
+                    <p>Could not connect to the evaluation service or an error occurred. Please check the console for details.</p>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                `;
             } finally {
                 submitButton.disabled = false;
             }
         });
     </script>
 </body>
-</html> -->
+</html>

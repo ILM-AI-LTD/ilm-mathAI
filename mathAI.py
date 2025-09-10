@@ -101,13 +101,14 @@ def evaluate_solution():
         validation = validation_service.validate_evaluation_request(data)
         if not validation['valid']:
             return jsonify({"success": False, "error": validation['error']}), 400
-        
+        histo = data.get('chat_history', '')
         step_count = data.get('nextStepCount', 0)
         result = math_service.evaluate_math_solution(
             question=data['question'],
             correct_answer=data['correct_answer'],
             student_work=data['student_answer'],
-            step_count=step_count
+            step_count=step_count,
+            prev_history=histo
         )
         
         return jsonify(result), 200 if result.get('success') else 500
@@ -139,17 +140,19 @@ def full_evaluation():
         filename = secure_filename(image_file.filename)
         temp_image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         image_file.save(temp_image_path)
-
+        histo = request.form.get('history', '[]')
         # 3. Process the file using the service
         result = math_service.process_full_evaluation(
             image_data=temp_image_path,
             question=question,
             correct_answer=correct_answer,
-            step_count=step_count
+            step_count=step_count,
+            prev_history = histo 
         )
         
         # 4. Clean up the temporary file
         os.remove(temp_image_path)
+        print(result)
 
         return jsonify(result), 200 if result.get('success') else 500
 
