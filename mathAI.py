@@ -140,7 +140,7 @@ def full_evaluation():
         filename = secure_filename(image_file.filename)
         temp_image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         image_file.save(temp_image_path)
-        histo = request.form.get('history', '[]')
+        histo = request.form.get('chat_history', '[]')
         # 3. Process the file using the service
         result = math_service.process_full_evaluation(
             image_data=temp_image_path,

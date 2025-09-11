@@ -224,7 +224,7 @@ class MathEvaluationService:
                 "evaluation": None,
                 "nextStepCount": eval_result['nextStepCount'],
                 "hint": None,
-                "history": cur_history
+                "chat_history": cur_history
             }
 
         # Determine if the process is finished based on the hint content
@@ -238,7 +238,7 @@ class MathEvaluationService:
             "hint": eval_result.get('hint'),
             "error": None,
             "is_finished": is_finished,
-            "history": cur_history
+            "chat_history": cur_history
         }
 
 
