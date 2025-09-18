@@ -5,23 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Math AI Evaluator ✨</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <script>
-        MathJax = {
-          tex: {
-            inlineMath: [['$', '$'], ['\\(', '\\)']]
-          },
-          svg: {
-            fontCache: 'global'
-          }
-        };
-    </script>
-    <script type="text/javascript" id="MathJax-script" async
-      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
-    </script>
-    
     <style>
-        /* CSS Variables for easy theming */
         :root {
             --primary-color: #4a90e2;
             --primary-hover: #357abd;
@@ -32,12 +16,12 @@
             --light-text: #5d6d7e;
             --border-color: #e0e0e0;
             --shadow-color: rgba(0, 0, 0, 0.08);
-            --gradient-start: #eaf2f8;
-            --gradient-end: #ffffff;
+            --info-color: #3498db;
         }
+
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-image: linear-gradient(120deg, var(--gradient-start), var(--gradient-end));
+            background-color: var(--light-bg);
             color: var(--dark-text);
             display: flex;
             justify-content: center;
@@ -45,8 +29,8 @@
             padding: 2rem;
             min-height: 100vh;
             margin: 0;
-            box-sizing: border-box;
         }
+
         main {
             background-color: #fff;
             padding: 2.5rem;
@@ -54,85 +38,48 @@
             box-shadow: 0 8px 24px var(--shadow-color);
             border: 1px solid var(--border-color);
             width: 100%;
-            max-width: 650px;
-            transition: all 0.3s ease;
+            max-width: 750px;
         }
+
         .header {
             text-align: center;
             margin-bottom: 2rem;
         }
+
         .header h1 {
             font-size: 2rem;
             color: var(--dark-text);
-            margin: 0 0 0.5rem 0;
         }
+
         .header i {
             color: var(--primary-color);
         }
+
         .header p {
             color: var(--light-text);
-            margin: 0;
         }
+
         form {
             display: flex;
             flex-direction: column;
             gap: 1.5rem;
         }
+
         label {
             font-weight: 600;
             margin-bottom: 0.5rem;
             display: block;
         }
-        input[type="text"] {
+
+        input[type="text"], input[type="file"] {
             padding: 0.8rem 1rem;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             font-size: 1rem;
             width: 100%;
             box-sizing: border-box;
-            transition: border-color 0.3s, box-shadow 0.3s;
         }
-        input[type="text"]:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
-        }
-        .file-drop-area {
-            position: relative;
-            border: 2px dashed var(--border-color);
-            border-radius: 8px;
-            padding: 2rem;
-            text-align: center;
-            color: var(--light-text);
-            cursor: pointer;
-            transition: border-color 0.3s, background-color 0.3s;
-        }
-        .file-drop-area.dragover {
-            border-color: var(--primary-color);
-            background-color: #f0f6ff;
-        }
-        .file-drop-area input[type="file"] {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
-        }
-        .file-drop-area .icon {
-            font-size: 2.5rem;
-            color: var(--primary-color);
-            margin-bottom: 1rem;
-        }
-        #image-preview {
-            max-width: 100%;
-            max-height: 200px;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            margin-top: 1rem;
-            object-fit: contain;
-        }
+
         button {
             padding: 0.9rem 1.5rem;
             background-color: var(--primary-color);
@@ -142,25 +89,31 @@
             font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
+            transition: background-color 0.3s;
         }
+
         button:hover:not(:disabled) {
             background-color: var(--primary-hover);
-            transform: translateY(-2px);
         }
+
         button:disabled {
             background-color: #a9cce3;
             cursor: not-allowed;
         }
+        
         #results-container {
             margin-top: 2.5rem;
+            border-top: 1px solid var(--border-color);
+            padding-top: 2rem;
         }
+
         .spinner-container {
             display: flex;
             justify-content: center;
             align-items: center;
             padding: 2rem;
         }
+        
         .spinner {
             border: 4px solid rgba(0, 0, 0, 0.1);
             width: 36px;
@@ -169,100 +122,85 @@
             border-left-color: var(--primary-color);
             animation: spin 1s ease infinite;
         }
+
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        #results-output {
+
+        .result-item {
+            margin-bottom: 1.5rem;
+            padding: 1.25rem;
             background-color: var(--light-bg);
-            padding: 1.5rem;
             border-radius: 8px;
             border: 1px solid var(--border-color);
         }
-        #results-output h3 {
-            margin-top: 0;
-            font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        #results-output h3.correct { color: var(--success-color); }
-        #results-output h3.incorrect { color: var(--error-color); }
 
-        /* ADDED: Styles for new output sections */
-        #results-output h4 {
-            margin-top: 1.5rem;
-            margin-bottom: 0.75rem;
+        .result-item h4 {
+            margin: 0 0 0.75rem 0;
+            font-size: 1.1rem;
             color: var(--dark-text);
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            font-size: 1.1rem;
         }
-        #results-output p {
-            line-height: 1.7;
-            font-size: 1rem;
+        
+        .result-item p, .result-item pre {
+            margin: 0;
             color: var(--light-text);
-        }
-        .evaluation-content, .extracted-text-box {
-            background-color: #fdfdfd;
-            border: 1px solid var(--border-color);
-            padding: 1rem;
-            border-radius: 6px;
             white-space: pre-wrap;
-            font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+            word-wrap: break-word;
             font-size: 0.95rem;
             line-height: 1.6;
         }
-        hr {
-            border: none;
-            border-top: 1px solid #e9ecef;
-            margin: 2rem 0;
+        
+        .result-item pre {
+             background-color: #eef1f3;
+             padding: 1rem;
+             border-radius: 6px;
         }
-        /* END ADDED STYLES */
 
-        .hint-box {
+        .status-badge {
+            font-weight: bold;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.9rem;
+        }
+        .status-badge.success {
+            background-color: #e9f7ef;
+            color: var(--success-color);
+        }
+        .status-badge.failure {
+            background-color: #fdedec;
+            color: var(--error-color);
+        }
+         .status-badge.info {
             background-color: #eaf2f8;
-            border-left: 4px solid var(--primary-color);
-            padding: 1.25rem;
-            margin-top: 1.5rem;
-            border-radius: 4px;
+            color: var(--info-color);
         }
-        .hint-box h4 {
-            margin: 0 0 0.5rem 0;
-            color: var(--dark-text);
-        }
-        .hint-box p {
-            margin: 0;
-            color: var(--light-text);
-        }
+
     </style>
 </head>
 <body>
     <main>
         <div class="header">
             <h1><i class="fa-solid fa-square-root-variable"></i> Math AI Evaluator</h1>
-            <p>Upload a student's work to get instant, AI-powered feedback.</p>
+            <p>Upload student work to see a detailed, AI-powered evaluation.</p>
         </div>
 
         <form id="eval-form">
             <div>
                 <label for="question">Question</label>
-                <input type="text" id="question" name="question" required placeholder="e.g., Solve for x: 2x + 5 = 15">
+                <input type="text" id="question" name="question" required placeholder="e.g., Solve sin(2x) + cos(x) = 1 for 0 ≤ x ≤ 2π">
             </div>
             <div>
                 <label for="correct-answer">Correct Answer</label>
-                <input type="text" id="correct-answer" name="correct_answer" required placeholder="e.g., 5">
+                <input type="text" id="correct-answer" name="correct_answer" required placeholder="e.g., x=0, x=π/2, x=3π/2, x=2π">
             </div>
             
             <div>
                 <label for="image-file">Student's Work (Image)</label>
-                <div class="file-drop-area">
-                    <input type="file" id="image-file" name="image" accept="image/*" required>
-                    <div class="icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
-                    <span class="file-message">Drag & drop an image here, or click to select</span>
-                    <img id="image-preview" src="" alt="Image preview" style="display: none;">
-                </div>
+                <input type="file" id="image-file" name="image" accept="image/*" required>
             </div>
 
             <button type="submit" id="submit-button">Evaluate</button>
@@ -270,7 +208,7 @@
 
         <div id="results-container" style="display: none;">
              <div id="status-message"></div>
-            <div id="results-output"></div>
+             <div id="results-output"></div>
         </div>
     </main>
 
@@ -280,104 +218,6 @@
         const resultsContainer = document.getElementById('results-container');
         const resultsOutput = document.getElementById('results-output');
         const statusMessage = document.getElementById('status-message');
-        
-        const fileDropArea = document.querySelector('.file-drop-area');
-        const imageFile = document.getElementById('image-file');
-        const imagePreview = document.getElementById('image-preview');
-        const fileMessage = document.querySelector('.file-message');
-
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            fileDropArea.addEventListener(eventName, e => {
-                e.preventDefault();
-                e.stopPropagation();
-            });
-        });
-        
-        ['dragenter', 'dragover'].forEach(eventName => {
-            fileDropArea.addEventListener(eventName, () => fileDropArea.classList.add('dragover'));
-        });
-
-        ['dragleave', 'drop'].forEach(eventName => {
-            fileDropArea.addEventListener(eventName, () => fileDropArea.classList.remove('dragover'));
-        });
-
-        fileDropArea.addEventListener('drop', e => {
-            imageFile.files = e.dataTransfer.files;
-            handleFileChange();
-        });
-
-        imageFile.addEventListener('change', handleFileChange);
-
-        function handleFileChange() {
-            const file = imageFile.files[0];
-            if (file) {
-                fileMessage.textContent = file.name;
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    imagePreview.src = e.target.result;
-                    imagePreview.style.display = 'block';
-                };
-                reader.readAsDataURL(file);
-            }
-        }
-
-        // 2. UPDATED: `displayResults` function to show all fields
-        function displayResults(data) {
-            let content = '';
-
-            if (data.error && data.error !== null) {
-                content = `
-                    <h3 class="incorrect"><i class="fa-solid fa-triangle-exclamation"></i> An Error Occurred</h3>
-                    <p>${data.error}</p>
-                `;
-            } else {
-                const isCorrect = data.is_finished;
-                const resultIcon = isCorrect ? '<i class="fa-solid fa-circle-check"></i>' : '<i class="fa-solid fa-circle-xmark"></i>';
-                const resultClass = isCorrect ? 'correct' : 'incorrect';
-
-                // Main Evaluation Feedback
-                content += `
-                    <h3 class="${resultClass}">${resultIcon} AI Evaluation</h3>
-                    <div class="evaluation-content">${data.evaluation || 'No evaluation provided.'}</div>
-                `;
-
-                // Hint Box
-                if (data.hint) {
-                    content += `
-                        <div class="hint-box">
-                            <h4>💡 Hint</h4>
-                            <p>${data.hint}</p>
-                        </div>
-                    `;
-                }
-
-                // Extracted Text from Image
-                if (data.extracted_text) {
-                     content += `
-                        <hr>
-                        <h4><i class="fa-solid fa-magnifying-glass"></i> Extracted Text from Image</h4>
-                        <div class="extracted-text-box">${data.extracted_text}</div>
-                    `;
-                }
-
-                // Other metadata
-                content += `
-                    <hr>
-                    <h4><i class="fa-solid fa-circle-info"></i> Request Details</h4>
-                    <p style="color: #2c3e50;">
-                        <strong>API Success:</strong> ${data.success}<br>
-                        <strong>Is Finished:</strong> ${data.is_finished}<br>
-                        <strong>Next Step Count:</strong> ${data.nextStepCount}
-                    </p>
-                `;
-            }
-            resultsOutput.innerHTML = content;
-
-            // Tell MathJax to typeset the new content
-            if (window.MathJax) {
-                MathJax.typesetPromise([resultsOutput]).catch((err) => console.error('MathJax typesetting failed:', err));
-            }
-        }
 
         form.addEventListener('submit', async (event) => {
             event.preventDefault();
@@ -388,37 +228,109 @@
             resultsOutput.innerHTML = ''; 
 
             const formData = new FormData(form);
-            formData.append('currentStepCount', '0');
-            // const val = "https://platform.math.ilmino.com/api/full_evaluation";
-            const val = "http://127.0.0.1:5000/api/full_evaluation";
+            // This is where you would make the real API call
+            // const response = await fetch('YOUR_API_ENDPOINT/api/full_evaluation', {
+            //     method: 'POST',
+            //     body: formData,
+            // });
+            // const result = await response.json();
             
-            try {
-                const response = await fetch(val, {
-                    method: 'POST',
-                    body: formData,
-                });
+            // --- MOCK API CALL FOR DEMONSTRATION ---
+            // We simulate a network delay and return a sample payload.
+            await new Promise(resolve => setTimeout(resolve, 1500)); 
+            const result = {
+                'success': true,
+                'extracted_text': 'Use $\\sin 2x = 2 \\sin x \\cos x$.\\n$2 \\sin x \\cos x + \\cos x = 1 \\Rightarrow \\cos x(2 \\sin x + 1) = 1$.\\nLet $s = \\sin x$. Eliminating $\\cos x$ with $\\cos^2 x = 1 - s^2$ leads to\\n$s (4s^3 + 4s^2 - 3s - 4) = 0$.\\nSo $s = 0$ or $4s^3 + 4s^2 - 3s - 4 = 0$. The cubic has one real root $s \\approx 0.9375648971$.\\nThus\\n* $s = 0 \\Rightarrow \\sin x = 0$ and $\\cos x = 1$ gives $x = 0$ (and $x = 2\\pi$ in the closed interval).\\n* $s \\approx 0.9375648971 \\Rightarrow x = \\arcsin(s) \\approx 1.215561666$ rad (the other angle $\\pi - \\arcsin s$ does not satisfy the original equation).\\n',
+                'evaluation': '## Step-by-step evaluation\\n\\n1. You correctly used sin(2x)=2 sin x cos x and rewrote the equation as cos x(2 sin x + 1)=1.\\n2. Letting s=sin x and eliminating cos x by cos^2 x = 1 - s^2, then squaring, leads to s(4s^3 + 4s^2 - 3s - 4)=0 — algebra is correct; remember squaring can introduce extraneous roots so we must check.\\n3. s=0 gives sin x=0 with cos x=1, so x=0 and x=2π (both in the interval).\\n4. The cubic’s real root s≈0.9375648971 gives cos x = 1/(2s+1) > 0, so only x = arcsin(s) ≈ 1.215561666 satisfies the original equation (π - arcsin(s) does not).\\n\\n**Conclusion:** x = 0, x ≈ 1.215561666, x = 2π. Good work so far.',
+                'nextStepCount': 1,
+                'hint': 'Your answer is correct.',
+                'error': null,
+                'is_finished': true,
+                'chat_history': "Previous Step 1...\nPrevious Step 2..."
+            };
+            // --- END MOCK API CALL ---
 
-                if (!response.ok) {
-                    const errorData = await response.json().catch(() => ({ detail: 'Server returned an invalid response.' }));
-                    throw new Error(`HTTP error! Status: ${response.status} - ${errorData.detail || 'Unknown error'}`);
-                }
-
-                const result = await response.json();
-                statusMessage.innerHTML = '';
-                displayResults(result);
-
-            } catch (error) {
-                console.error('Error:', error);
-                statusMessage.innerHTML = '';
-                resultsOutput.innerHTML = `
-                    <h3 class="incorrect"><i class="fa-solid fa-server"></i> Request Failed</h3>
-                    <p>Could not connect to the evaluation service or an error occurred. Please check the console for details.</p>
-                    <p><strong>Error:</strong> ${error.message}</p>
-                `;
-            } finally {
-                submitButton.disabled = false;
-            }
+            statusMessage.innerHTML = '';
+            displayFullResults(result);
+            submitButton.disabled = false;
         });
+        
+        function displayFullResults(data) {
+            resultsOutput.innerHTML = ''; // Clear previous results
+
+            // 1. Success Status
+            const successBadge = data.success 
+                ? '<span class="status-badge success">True</span>' 
+                : '<span class="status-badge failure">False</span>';
+            resultsOutput.innerHTML += `
+                <div class="result-item">
+                    <h4><i class="fa-solid fa-check-double"></i> Success</h4>
+                    <p>${successBadge}</p>
+                </div>`;
+
+            // 2. Is Finished Status
+            const finishedBadge = data.is_finished 
+                ? '<span class="status-badge success">Yes</span>' 
+                : '<span class="status-badge info">No</span>';
+            resultsOutput.innerHTML += `
+                <div class="result-item">
+                    <h4><i class="fa-solid fa-flag-checkered"></i> Is Finished</h4>
+                    <p>${finishedBadge}</p>
+                </div>`;
+
+            // 3. Evaluation
+             if (data.evaluation) {
+                resultsOutput.innerHTML += `
+                    <div class="result-item">
+                        <h4><i class="fa-solid fa-clipboard-check"></i> Evaluation</h4>
+                        <pre><code>${data.evaluation}</code></pre>
+                    </div>`;
+            }
+
+            // 4. Hint
+             if (data.hint) {
+                resultsOutput.innerHTML += `
+                    <div class="result-item">
+                        <h4><i class="fa-solid fa-lightbulb"></i> Hint</h4>
+                        <p>${data.hint}</p>
+                    </div>`;
+            }
+            
+            // 5. Extracted Text (OCR)
+            if (data.extracted_text) {
+                resultsOutput.innerHTML += `
+                    <div class="result-item">
+                        <h4><i class="fa-solid fa-eye"></i> Extracted Text (OCR)</h4>
+                        <pre><code>${data.extracted_text}</code></pre>
+                    </div>`;
+            }
+
+            // 6. Chat History
+            if (data.chat_history) {
+                 resultsOutput.innerHTML += `
+                    <div class="result-item">
+                        <h4><i class="fa-solid fa-clock-rotate-left"></i> Chat History</h4>
+                        <pre><code>${data.chat_history}</code></pre>
+                    </div>`;
+            }
+
+            // 7. Next Step Count
+            resultsOutput.innerHTML += `
+                <div class="result-item">
+                    <h4><i class="fa-solid fa-arrow-right-long"></i> Next Step Count</h4>
+                    <p><span class="status-badge info">${data.nextStepCount ?? 'N/A'}</span></p>
+                </div>`;
+
+            // 8. Error
+            const errorContent = data.error 
+                ? `<pre><code>${data.error}</code></pre>` 
+                : '<p>None</p>';
+            resultsOutput.innerHTML += `
+                <div class="result-item">
+                    <h4><i class="fa-solid fa-triangle-exclamation"></i> Error</h4>
+                    ${errorContent}
+                </div>`;
+        }
     </script>
 </body>
 </html>

@@ -115,6 +115,14 @@ Always structure your evaluation as follows:
 }
 ```
 
+### Example 4 - Complte Work
+```json
+{
+"evaluation": "## Current Step Analysis\n\nYou solved the equation and found $x = 4$. **Excellent job!**\n\n## Final Check\n\nMake sure to substitute $x = 4$ back into the original equation to verify your solution.",
+"hint": "Your answer is correct"
+}
+```
+
 ## CRITICAL FORMATTING RULES
 1. **NEVER** write mathematical expressions in plain text
 2. **ALWAYS** use `$...$` for inline math variables and expressions  
@@ -122,7 +130,7 @@ Always structure your evaluation as follows:
 4. **ALWAYS** use proper markdown headers (`##`, `###`)
 5. **ALWAYS** use markdown formatting for emphasis (`**bold**`, `*italic*`)
 6. Every mathematical symbol, variable, equation, and expression MUST be properly formatted using markdown math syntax
-
+7. **NEVER** give "Your answer is correct" unless the student's work is complete. 
 ## RESPONSE TONE EXAMPLES
 
 ### Encouraging Phrases
@@ -137,7 +145,11 @@ Always structure your evaluation as follows:
 - "Take another look at..."
 - "Double-check your work on..."
 
-Remember: Every mathematical expression must use proper markdown formatting with $ or $$ delimiters.
+Remember: Every mathematical expression must use proper markdown formatting with $..$ or $$..$$ delimiters.
+Remember: Never use — in the response.
+Remember: Always provide hints only when a mistake is made.
+Remember: Evaluate the student's current answer based on the question and correct answer. If the current answer is not the first step, look on the previous steps for context. and evaluate base on whole. and suggest next steps."
+
 """ 
 
 ocr_prompt = """Extract all handwritten text from this image. 

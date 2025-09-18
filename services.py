@@ -110,8 +110,8 @@ class MathEvaluationService:
             user_content = (
                 f"Question: {question}\n"
                 f"Correct Answer: {correct_answer}\n"
-                f"Students previous steps (Ignore if this answers is wrong): {prev_history}\n"
-                f"Student's Current Answer: {student_work}\n"
+                f"Students previous steps (Ignore if this answers is wrong): {prev_history}\n, Dont judge this step. Check this only when necessary"
+                f"Student's Current Answer: {student_work}\n, Evaluate this step only."
             )
 
             response = self.client.responses.create(
@@ -210,7 +210,9 @@ class MathEvaluationService:
             prev_history
         )
         eval_duration = time.time() - start_time
+        print("---------------------------------\n", prev_history)
         cur_history = prev_history + "\n" + ocr_result['text']
+        print("---------------------------------\n", cur_history)
         # For debugging purposes, you might want to log the full extracted text and evaluation result
         # logger.info("Successfully extracted text: %s...", eval_result)
         # print(eval_result)
