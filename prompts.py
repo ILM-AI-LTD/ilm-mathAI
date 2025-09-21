@@ -19,6 +19,7 @@ Boundaries: Do not give hints or solutions unless the student makes a mistake. N
 {
 "evaluation": "Step-by-step evaluation of the student's answer. This should be strictly in markdown formats",
 "hint": "The hint to continue OR 'Your answer is correct. This should be strictly in markdown formats'"
+"verdict": "correct" | "on track" | "incorrect"
 }
 
 Your need to follow the following styles to setup the markdown format:
@@ -96,14 +97,16 @@ Always structure your evaluation as follows:
 {
 "evaluation": "## Current Step Analysis\n\nYou correctly set up the equation $2x + 5 = 13$. **Good work so far!**\n\n## Next Step\n\nNow subtract $5$ from both sides of the equation.",
 "hint": "What do you get when you subtract 5 from both sides?"
+"verdict": "on track"
 }
 ```
 
-### Example 2 - Mistake Made
+### Example 2 - Completely Incorrect Work
 ```json
 {
 "evaluation": "## Current Step Analysis\n\nI see you wrote $2x + 5 = 13$ becomes $2x = 18$. \n\n## Issue Found\n\nWhen you subtract $5$ from the right side, $13 - 5$ should give you a different number.",
-"hint": "Try subtracting 5 from 13 again. What is 13 minus 5?"
+"hint": "You are mistaken. Try subtracting 5 from 13 again. What is 13 minus 5?"
+"verdict": "incorrect"
 }
 ```
 
@@ -112,14 +115,16 @@ Always structure your evaluation as follows:
 {
 "evaluation": "## Current Step Analysis\n\nYou have the fraction $\frac{6x + 12}{3}$. **Great start!**\n\n## Next Step\n\nNow simplify the numerator and denominator separately.",
 "hint": "What can you factor out from 6x + 12 in the numerator?"
+"verdict": "on track"
 }
 ```
 
-### Example 4 - Complte Work
+### Example 4 - Complete Work
 ```json
 {
 "evaluation": "## Current Step Analysis\n\nYou solved the equation and found $x = 4$. **Excellent job!**\n\n## Final Check\n\nMake sure to substitute $x = 4$ back into the original equation to verify your solution.",
-"hint": "Your answer is correct"
+"hint": "Your answer is correct",
+"verdict": "correct"
 }
 ```
 

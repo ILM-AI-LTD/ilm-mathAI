@@ -210,12 +210,12 @@ class MathEvaluationService:
             prev_history
         )
         eval_duration = time.time() - start_time
-        print("---------------------------------\n", prev_history)
+        # print("---------------------------------\n", prev_history)
         cur_history = prev_history + "\n" + ocr_result['text']
-        print("---------------------------------\n", cur_history)
+        # print("---------------------------------\n", cur_history)
         # For debugging purposes, you might want to log the full extracted text and evaluation result
         # logger.info("Successfully extracted text: %s...", eval_result)
-        # print(eval_result)
+        print(eval_result)
         logger.info("Evaluation processing time: %.2f seconds", eval_duration)
 
         if not eval_result['success']:
@@ -240,7 +240,8 @@ class MathEvaluationService:
             "hint": eval_result.get('hint'),
             "error": None,
             "is_finished": is_finished,
-            "chat_history": cur_history
+            "chat_history": cur_history,
+            "verdict": eval_result.get('verdict').lower()
         }
 
 

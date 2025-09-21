@@ -152,7 +152,7 @@ def full_evaluation():
         
         # 4. Clean up the temporary file
         os.remove(temp_image_path)
-        print(result)
+        # print(result)
 
         return jsonify(result), 200 if result.get('success') else 500
 
