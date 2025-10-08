@@ -230,7 +230,7 @@ class MathEvaluationService:
             }
 
         # Determine if the process is finished based on the hint content
-        is_finished = 'correct' in eval_result.get('hint', '').lower()
+        is_finished = 'correct' in eval_result.get('verdict', '').lower()
 
         return {
             "success": True,
