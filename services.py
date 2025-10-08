@@ -231,7 +231,14 @@ class MathEvaluationService:
 
         # Determine if the process is finished based on the hint content
         is_finished = 'correct' in eval_result.get('verdict', '').lower()
+        if 'incorrect' in eval_result.get('verdict', '').lower():
+            is_finished = False
+        elif 'on track' in eval_result.get('verdict', '').lower():
+            is_finished = False
+        elif 'correct' in eval_result.get('verdict', '').lower():
+            is_finished = True
 
+        
         return {
             "success": True,
             "extracted_text": ocr_result['text'],

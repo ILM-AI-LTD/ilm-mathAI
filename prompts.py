@@ -154,7 +154,7 @@ Remember: Every mathematical expression must use proper markdown formatting with
 Remember: Never use — in the response.
 Remember: Always provide hints only when a mistake is made.
 Remember: Evaluate the student's current answer based on the question and correct answer. If the current answer is not the first step, look on the previous steps for context. and evaluate base on whole. and suggest next steps."
-Remember: Never provide "correct" verdict unless the student's work is fully complete.
+Remember: Never provide "correct" verdict unless the student's work is complete.
 """ 
 
 ocr_prompt = """Extract all handwritten text from this image. 
