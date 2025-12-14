@@ -26,6 +26,21 @@ logger = logging.getLogger(__name__)
 GEMINI_FLASH_MODEL = "gemini-2.0-flash"
 GPT_NANO_MODEL = "gpt-5-mini"
 
+def _mask_key(key: str) -> str:
+    """Return a lightly masked version of an API key for debugging."""
+    if not key:
+        return "missing"
+    if len(key) <= 8:
+        return f"{key[:2]}***"
+    return f"{key[:4]}...{key[-4:]}"
+
+def _api_key_hint() -> str:
+    """Expose partial API keys to help debug which credentials are in use."""
+    return (
+        f"openai={_mask_key(os.getenv('OPENAI_API_KEY', ''))}, "
+        f"google={_mask_key(os.getenv('GOOGLE_API_KEY', ''))}"
+    )
+
 class MathEvaluationService:
     """Service class for handling math evaluation operations"""
 
@@ -75,15 +90,18 @@ class MathEvaluationService:
             return {
                 "success": False,
                 "text": None,
-                "error": f"Image file not found: {image_data}"
+                "error": f"Image file not found: {image_data}",
+                "key_hint": _api_key_hint()
             }
         except Exception as e:
             # Catching a broad exception for unexpected API or other errors.
             logger.error("An unexpected error occurred during OCR: %s", e, exc_info=True)
+            key_hint = _api_key_hint()
             return {
                 "success": False,
                 "text": None,
-                "error": f"Failed to extract text: {str(e)}"
+                "error": f"Failed to extract text: {str(e)} (keys: {key_hint})",
+                "key_hint": key_hint
             }
 
     def evaluate_math_solution(
@@ -148,21 +166,25 @@ class MathEvaluationService:
 
         except json.JSONDecodeError as e:
             logger.error("Evaluation failed: Could not decode JSON from API response. Error: %s", e)
+            key_hint = _api_key_hint()
             return {
                 "success": False,
                 "evaluation": None,
                 "hint": None,
                 "nextStepCount": step_count + 1,
-                "error": f"Invalid JSON response from evaluation API: {e}"
+                "error": f"Invalid JSON response from evaluation API: {e} (keys: {key_hint})",
+                "key_hint": key_hint
             }
         except Exception as e:
             logger.error("An unexpected error occurred during evaluation: %s", e, exc_info=True)
+            key_hint = _api_key_hint()
             return {
                 "success": False,
                 "evaluation": None,
                 "hint": None,
                 "nextStepCount": step_count + 1,
-                "error": f"An unexpected evaluation error occurred: {str(e)}"
+                "error": f"An unexpected evaluation error occurred: {str(e)} (keys: {key_hint})",
+                "key_hint": key_hint
             }
 
     def process_full_evaluation(
@@ -193,11 +215,13 @@ class MathEvaluationService:
 
         if not ocr_result['success']:
             logger.info("OCR Failed")
+            key_hint = ocr_result.get('key_hint', _api_key_hint())
             return {
                 "success": False,
                 "error": f"OCR failed: {ocr_result['error']}",
                 "extracted_text": None,
-                "evaluation": None
+                "evaluation": None,
+                "key_hint": key_hint
             }
 
         # Step 2: Evaluate the extracted text
@@ -219,6 +243,7 @@ class MathEvaluationService:
         logger.info("Evaluation processing time: %.2f seconds", eval_duration)
 
         if not eval_result['success']:
+            key_hint = eval_result.get('key_hint', _api_key_hint())
             return {
                 "success": False,
                 "error": f"Evaluation failed: {eval_result['error']}",
@@ -226,7 +251,8 @@ class MathEvaluationService:
                 "evaluation": None,
                 "nextStepCount": eval_result['nextStepCount'],
                 "hint": None,
-                "chat_history": cur_history
+                "chat_history": cur_history,
+                "key_hint": key_hint
             }
 
         # Determine if the process is finished based on the hint content
